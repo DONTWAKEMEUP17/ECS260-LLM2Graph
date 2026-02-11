@@ -1,0 +1,86 @@
+{
+  "text": "The test fails when n=0 due to an IndexError caused by looping one index too far, indicating an off-by-one error in the loop boundary.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "Tests fail when n=0 with IndexError",
+          "type": "Claim",
+          "source": "bug report",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "Off-by-one bug in loop over arr[i]",
+          "type": "Claim",
+          "source": "user statement",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Code loops from i=0 to i=n inclusive (range(n+1))",
+          "type": "Evidence",
+          "source": "code",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "e2",
+          "label": "IndexError: list index out of range at arr[i]",
+          "type": "Evidence",
+          "source": "error message",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "a1",
+          "label": "arr has length n",
+          "type": "Assumption",
+          "source": "typical context",
+          "confidence": 0.8
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "supports:c1->e2",
+          "source": "c1",
+          "target": "e2",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "depends-on:c2->e1",
+          "source": "c2",
+          "target": "e1",
+          "type": "depends-on"
+        }
+      },
+      {
+        "data": {
+          "id": "depends-on:c2->a1",
+          "source": "c2",
+          "target": "a1",
+          "type": "depends-on"
+        }
+      },
+      {
+        "data": {
+          "id": "implies:c1->c2",
+          "source": "c1",
+          "target": "c2",
+          "type": "implies"
+        }
+      }
+    ]
+  }
+}

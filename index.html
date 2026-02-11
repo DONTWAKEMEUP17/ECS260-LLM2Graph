@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LLM Reasoning Graph (Cytoscape)</title>
+  <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .wrap { display: grid; grid-template-columns: 420px 1fr; height: 100vh; }
+    .left { padding: 16px; border-right: 1px solid #ddd; overflow: auto; }
+    .right { position: relative; }
+    #cy { position: absolute; inset: 0; }
+    h2 { margin: 0 0 12px 0; font-size: 18px; }
+    .hint { color: #666; font-size: 12px; margin-top: 8px; }
+    .card { border: 1px solid #eee; border-radius: 10px; padding: 12px; background: #fafafa; }
+    .meta { margin-top: 10px; font-size: 12px; color: #444; }
+    code { background: #f2f2f2; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="left">
+      <h2>Explanation</h2>
+      <div id="explain" class="card">Loading…</div>
+      <div class="hint">Tip: click a node to see details here.</div>
+      <div id="nodeDetail" class="meta"></div>
+    </div>
+    <div class="right">
+      <div id="cy"></div>
+    </div>
+  </div>
+
+  <script>
+    async function main() {
+      const res = await fetch("./cyto.json");
+      const data = await res.json();
+
+      // Show text
+      document.getElementById("explain").textContent = data.text ?? "(no text)";
+
+      // Build Cytoscape
+      const cy = cytoscape({
+        container: document.getElementById("cy"),
+        elements: data.elements,
+        style: [
+          {
+            selector: "node",
+            style: {
+              "label": "data(label)",
+              "text-wrap": "wrap",
+              "text-max-width": 220,
+              "font-size": 10,
+              "padding": 8,
+              "shape": "round-rectangle",
+              "border-width": 1
+            }
+          },
+          { selector: 'node[type="Claim"]', style: { "border-width": 2 } },
+          { selector: 'node[type="Evidence"]', style: { "shape": "round-rectangle" } },
+          { selector: 'node[type="Assumption"]', style: { "shape": "diamond" } },
+
+          {
+            selector: "edge",
+            style: {
+              "curve-style": "bezier",
+              "target-arrow-shape": "triangle",
+              "arrow-scale": 0.9,
+              "label": "data(type)",
+              "font-size": 9,
+              "text-rotation": "autorotate",
+              "text-margin-y": -8,
+              "width": 2
+            }
+          },
+
+          { selector: 'edge[type="supports"]', style: { "line-style": "solid" } },
+          { selector: 'edge[type="contradicts"]', style: { "line-style": "dashed" } },
+          { selector: 'edge[type="depends-on"]', style: { "line-style": "dotted" } },
+          { selector: 'edge[type="implies"]', style: { "line-style": "solid" } },
+
+          { selector: ".highlight", style: { "border-width": 4 } },
+          { selector: ".dim", style: { "opacity": 0.2 } },
+        ],
+        layout: { name: "cose", animate: false }
+      });
+
+      // Click node -> show details + highlight neighborhood
+      cy.on("tap", "node", (evt) => {
+        const n = evt.target;
+        const d = n.data();
+
+        document.getElementById("nodeDetail").innerHTML =
+          `<div><b>Node:</b> <code>${d.id}</code></div>` +
+          `<div><b>Type:</b> <code>${d.type ?? ""}</code></div>` +
+          `<div><b>Source:</b> <code>${d.source ?? ""}</code></div>` +
+          `<div><b>Confidence:</b> <code>${d.confidence ?? ""}</code></div>`;
+
+        cy.elements().removeClass("highlight").addClass("dim");
+        n.removeClass("dim").addClass("highlight");
+        n.neighborhood().removeClass("dim").addClass("highlight");
+      });
+
+      // Click background -> reset
+      cy.on("tap", (evt) => {
+        if (evt.target === cy) {
+          cy.elements().removeClass("dim highlight");
+          document.getElementById("nodeDetail").textContent = "";
+        }
+      });
+    }
+
+    main().catch(err => {
+      document.getElementById("explain").textContent = "Failed to load cyto.json: " + err;
+      console.error(err);
+    });
+  </script>
+</body>
+</html>
