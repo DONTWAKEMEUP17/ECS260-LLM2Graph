@@ -22,7 +22,7 @@
 ### 1. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 ### 2. Set your API key
 ### Windows(cmd):
