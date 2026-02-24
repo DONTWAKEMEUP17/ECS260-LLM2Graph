@@ -1,11 +1,11 @@
 {
-  "text": "The test fails when n=0 due to an IndexError caused by looping one index too far, indicating an off-by-one error in the loop boundary.",
+  "text": "The test fails when n=0 because the loop iterates one time too many, causing an index out of range error. This indicates an off-by-one bug in the loop range.",
   "elements": {
     "nodes": [
       {
         "data": {
           "id": "c1",
-          "label": "Tests fail when n=0 with IndexError",
+          "label": "tests fail when n=0 due to IndexError",
           "type": "Claim",
           "source": "bug report",
           "confidence": 1.0
@@ -13,37 +13,28 @@
       },
       {
         "data": {
-          "id": "c2",
-          "label": "Off-by-one bug in loop over arr[i]",
-          "type": "Claim",
-          "source": "user statement",
-          "confidence": 0.9
-        }
-      },
-      {
-        "data": {
           "id": "e1",
-          "label": "Code loops from i=0 to i=n inclusive (range(n+1))",
+          "label": "for i in range(n+1): arr[i] += 1 causes IndexError",
           "type": "Evidence",
-          "source": "code",
-          "confidence": 1.0
-        }
-      },
-      {
-        "data": {
-          "id": "e2",
-          "label": "IndexError: list index out of range at arr[i]",
-          "type": "Evidence",
-          "source": "error message",
+          "source": "code and error",
           "confidence": 1.0
         }
       },
       {
         "data": {
           "id": "a1",
-          "label": "arr has length n",
+          "label": "loop should iterate up to n, not n+1",
           "type": "Assumption",
-          "source": "typical context",
+          "source": "inference from off-by-one mention",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "there is an off-by-one bug causing the error",
+          "type": "Claim",
+          "source": "user belief",
           "confidence": 0.8
         }
       }
@@ -51,34 +42,34 @@
     "edges": [
       {
         "data": {
-          "id": "supports:c1->e2",
-          "source": "c1",
-          "target": "e2",
+          "id": "supports:e1->c1",
+          "source": "e1",
+          "target": "c1",
           "type": "supports"
         }
       },
       {
         "data": {
-          "id": "depends-on:c2->e1",
-          "source": "c2",
+          "id": "depends-on:a1->e1",
+          "source": "a1",
           "target": "e1",
           "type": "depends-on"
         }
       },
       {
         "data": {
-          "id": "depends-on:c2->a1",
+          "id": "supports:c2->a1",
           "source": "c2",
           "target": "a1",
-          "type": "depends-on"
+          "type": "supports"
         }
       },
       {
         "data": {
-          "id": "implies:c1->c2",
-          "source": "c1",
-          "target": "c2",
-          "type": "implies"
+          "id": "supports:c2->c1",
+          "source": "c2",
+          "target": "c1",
+          "type": "supports"
         }
       }
     ]
