@@ -1,5 +1,7 @@
 <pre>
 .
+├─ test_case # from QuixBugs(Only the executable `.py` files and corresponding `.txt` )
+├─ results # some sample results
 ├─ cyto.json # Generated output (do not edit manually)
 ├─ index.html # Frontend visualization (Cytoscape)
 ├─ main.py # Calls OpenAI and generates cyto.json
