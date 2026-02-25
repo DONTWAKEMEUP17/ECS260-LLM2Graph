@@ -5,6 +5,9 @@ from typing import List, Optional, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 from openai import OpenAI
 import json
+import os
+import sys
+from pathlib import Path
 
 client = OpenAI()
 
@@ -71,24 +74,10 @@ class ReasoningGraph(BaseModel):
             if e.target not in id_set:
                 raise ValueError(f"Edge target '{e.target}' not found in nodes")
 
-        # Optional semantic constraints (tighten rules)
-        # supports/contradicts: Evidence -> Claim (common case)
-        # depends-on: Claim -> Assumption
-        # implies: Claim -> Claim
-        # node_type = {n.id: n.type for n in self.nodes}
-        # for e in self.edges:
-        #     s, t, et = e.source, e.target, e.type
-        #     if et in (EdgeType.SUPPORTS, EdgeType.CONTRADICTS):
-        #         if not (node_type[s] == NodeType.EVIDENCE and node_type[t] == NodeType.CLAIM):
-        #             raise ValueError(f"{et} should be Evidence -> Claim, got {node_type[s]} -> {node_type[t]}")
-        #     if et == EdgeType.DEPENDS_ON:
-        #         if not (node_type[s] == NodeType.CLAIM and node_type[t] == NodeType.ASSUMPTION):
-        #             raise ValueError(f"depends-on should be Claim -> Assumption, got {node_type[s]} -> w{node_type[t]}")
-        #     if et == EdgeType.IMPLIES:
-        #         if not (node_type[s] == NodeType.CLAIM and node_type[t] == NodeType.CLAIM):
-        #             raise ValueError(f"implies should be Claim -> Claim, got {node_type[s]} -> {node_type[t]}")
+        return self
 
         return self
+        return values
 
 
 class Output(BaseModel):
@@ -120,47 +109,127 @@ def extract_graph(user_text: str) -> Output:
     return response.output_parsed
 
 
-if __name__ == "__main__":
-    sample = (
-        "Bug report: tests fail when n=0.\n"
-        "Code: for i in range(n+1): arr[i] += 1\n"
-        "Error: IndexError: list index out of range\n"
-        "I think it's an off-by-one bug."
-    )
+def load_sample_pairs(data_dir: str = "data") -> dict:
+    """Load paired .py and .txt files from data directory."""
+    pairs = {}
+    data_path = Path(data_dir)
+    
+    if not data_path.exists():
+        print(f"Data directory not found: {data_dir}")
+        return pairs
+    
+    # Find all .py files and their corresponding .txt files
+    py_files = {f.stem: f for f in data_path.glob("*.py")}
+    txt_files = {f.stem: f for f in data_path.glob("*.txt")}
+    
+    # Match .py with .txt (handle test_ prefix in txt files)
+    for py_stem, py_file in py_files.items():
+        # Try to find matching txt file
+        txt_file = None
+        
+        # Check for "test_<name>.txt"
+        if f"test_{py_stem}" in txt_files:
+            txt_file = txt_files[f"test_{py_stem}"]
+        # Check for "<name>.txt" (direct match)
+        elif py_stem in txt_files:
+            txt_file = txt_files[py_stem]
+        
+        if txt_file:
+            try:
+                with open(py_file, "r", encoding="utf-8") as f:
+                    py_content = f.read()
+                with open(txt_file, "r", encoding="utf-8") as f:
+                    txt_content = f.read()
+                
+                # Combine both contents
+                combined = f"[CODE FILE: {py_file.name}]\n{py_content}\n\n[OUTPUT FILE: {txt_file.name}]\n{txt_content}"
+                pairs[py_stem] = {
+                    "py_file": py_file.name,
+                    "txt_file": txt_file.name,
+                    "content": combined
+                }
+                print(f"Loaded pair: {py_file.name} + {txt_file.name}")
+            except Exception as e:
+                print(f"Error loading pair {py_stem}: {e}")
+    
+    return pairs
 
-    out = extract_graph(sample)
+
+def process_sample(sample_text: str, output_file: str = "cyto.json") -> dict:
+    """Process a sample and generate cyto.json format."""
+    out = extract_graph(sample_text)
     data = out.model_dump(mode="json")
 
     cyto = {
-    "text": data["text"],
-    "elements": {
-        "nodes": [
-            {
-                "data": {
-                    "id": n["id"],
-                    "label": n["text"],
-                    "type": n["type"],
-                    "source": n.get("source"),
-                    "confidence": n.get("confidence"),
+        "text": data["text"],
+        "elements": {
+            "nodes": [
+                {
+                    "data": {
+                        "id": n["id"],
+                        "label": n["text"],
+                        "type": n["type"],
+                        "source": n.get("source"),
+                        "confidence": n.get("confidence"),
+                    }
                 }
-            }
-            for n in data["graph"]["nodes"]
-        ],
-        "edges": [
-            {
-                "data": {
-                    "id": f'{e["type"]}:{e["source"]}->{e["target"]}',
-                    "source": e["source"],
-                    "target": e["target"],
-                    "type": e["type"],
+                for n in data["graph"]["nodes"]
+            ],
+            "edges": [
+                {
+                    "data": {
+                        "id": f'{e["type"]}:{e["source"]}->{e["target"]}',
+                        "source": e["source"],
+                        "target": e["target"],
+                        "type": e["type"],
+                    }
                 }
-            }
-            for e in data["graph"]["edges"]
-        ],
+                for e in data["graph"]["edges"]
+            ],
+        }
     }
-}
-    with open("cyto.json", "w", encoding="utf-8") as f:
+    
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(cyto, f, indent=2, ensure_ascii=False)
+    
+    return cyto
 
-    print("cyto.json exported successfully.")
+
+if __name__ == "__main__":
+    pairs = load_sample_pairs("data")
+    
+    if not pairs:
+        print("No matching .py and .txt file pairs found in data/")
+        sys.exit(1)
+    
+    # List available pairs
+    pair_names = list(pairs.keys())
+    print(f"\nAvailable sample pairs ({len(pair_names)}):")
+    for i, name in enumerate(pair_names, 1):
+        py_file = pairs[name]["py_file"]
+        txt_file = pairs[name]["txt_file"]
+        print(f"  {i}. {py_file} + {txt_file}")
+    
+    # Get user choice
+    if len(pair_names) == 1:
+        choice = 1
+        print(f"\nProcessing: {pair_names[0]}")
+    else:
+        try:
+            choice = int(input(f"\nSelect a pair (1-{len(pair_names)}): "))
+            if not (1 <= choice <= len(pair_names)):
+                print(f"Invalid choice. Using pair 1.")
+                choice = 1
+        except ValueError:
+            print("Invalid input. Using pair 1.")
+            choice = 1
+    
+    selected_pair = pair_names[choice - 1]
+    pair_data = pairs[selected_pair]
+    
+    print(f"\nProcessing: {pair_data['py_file']} + {pair_data['txt_file']}")
+    print(f"Combined content length: {len(pair_data['content'])} characters\n")
+    
+    process_sample(pair_data["content"], "cyto.json")
+    print(f"cyto.json exported successfully.")
 
