@@ -16,11 +16,18 @@
     .card { border: 1px solid #eee; border-radius: 10px; padding: 12px; background: #fafafa; }
     .meta { margin-top: 10px; font-size: 12px; color: #444; }
     code { background: #f2f2f2; padding: 2px 6px; border-radius: 6px; }
+    .selector { margin-bottom: 14px; }
+    .selector label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+    .selector select { width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="left">
+      <div class="selector">
+        <label for="bugSelect">Bug Case</label>
+        <select id="bugSelect"><option>Loading…</option></select>
+      </div>
       <h2>Explanation</h2>
       <div id="explain" class="card">Loading…</div>
       <div class="hint">Tip: click a node to see details here.</div>
@@ -32,15 +39,18 @@
   </div>
 
   <script>
-    async function main() {
-      const res = await fetch("./cyto.json");
+    let cy = null;
+
+    async function loadGraph(jsonPath) {
+      const res = await fetch(jsonPath);
       const data = await res.json();
 
-      // Show text
       document.getElementById("explain").textContent = data.text ?? "(no text)";
+      document.getElementById("nodeDetail").textContent = "";
 
-      // Build Cytoscape
-      const cy = cytoscape({
+      if (cy) cy.destroy();
+
+      cy = cytoscape({
         container: document.getElementById("cy"),
         elements: data.elements,
         style: [
@@ -110,8 +120,39 @@
       });
     }
 
+    async function main() {
+      const select = document.getElementById("bugSelect");
+
+      // Try to load manifest from pipeline output
+      let names = [];
+      try {
+        const m = await fetch("./output/manifest.json");
+        const manifest = await m.json();
+        names = Object.keys(manifest).filter(k => manifest[k].status === "ok");
+      } catch (_) {}
+
+      // Fallback to legacy cyto.json
+      if (names.length === 0) {
+        select.innerHTML = '<option value="./cyto.json">cyto.json</option>';
+        await loadGraph("./cyto.json");
+        return;
+      }
+
+      select.innerHTML = names
+        .map(n => `<option value="./output/${n}.json">${n}</option>`)
+        .join("");
+
+      await loadGraph(`./output/${names[0]}.json`);
+
+      select.addEventListener("change", () => {
+        loadGraph(select.value).catch(err => {
+          document.getElementById("explain").textContent = "Failed to load: " + err;
+        });
+      });
+    }
+
     main().catch(err => {
-      document.getElementById("explain").textContent = "Failed to load cyto.json: " + err;
+      document.getElementById("explain").textContent = "Error: " + err;
       console.error(err);
     });
   </script>

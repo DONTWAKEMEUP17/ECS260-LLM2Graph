@@ -1,0 +1,52 @@
+{
+  "text": "The bucketsort function intends to count occurrences of each integer in the input list and then reconstruct a sorted list based on these counts. However, the implementation incorrectly iterates over the original list 'arr' instead of the counts array when reconstructing the sorted list, causing incorrect sorting results and test failures.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "bucketsort function sorts the input list correctly",
+          "type": "Claim",
+          "source": "code:bucketsort.py L1-L14",
+          "confidence": 0.2
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Test outputs show sorted results contain many zeros and extra items not in expected output",
+          "type": "Evidence",
+          "source": "test_bucketsort.txt",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e2",
+          "label": "Code iterates over 'arr' instead of 'counts' to reconstruct the sorted array (line with 'for i, count in enumerate(arr):')",
+          "type": "Evidence",
+          "source": "code:bucketsort.py L7-L11",
+          "confidence": 0.9
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "contradicts:e2->c1",
+          "source": "e2",
+          "target": "c1",
+          "type": "contradicts"
+        }
+      },
+      {
+        "data": {
+          "id": "contradicts:e1->c1",
+          "source": "e1",
+          "target": "c1",
+          "type": "contradicts"
+        }
+      }
+    ]
+  }
+}

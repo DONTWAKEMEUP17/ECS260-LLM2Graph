@@ -1,0 +1,69 @@
+{
+  "text": "The implemented topological_ordering function fails to produce correct topological orderings because it incorrectly checks whether to add the next node based on if the ordered set supersets the outgoing nodes of that next node. This logic causes premature or missing insertions, resulting in incomplete and incorrectly ordered outputs as evident from test failures.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "The function topological_ordering produces incorrect topological sorts.",
+          "type": "Claim",
+          "source": "test output",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Test cases all fail with wrong node orderings and incomplete outputs.",
+          "type": "Evidence",
+          "source": "test_topological_ordering.txt",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "The failure is caused by improper logic inside the iteration checking if set(ordered_nodes) is a superset of nextnode.outgoing_nodes.",
+          "type": "Claim",
+          "source": "code and test output",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "a1",
+          "label": "Correct topological sorting requires that all dependencies (incoming nodes) of a node must appear before the node itself.",
+          "type": "Assumption",
+          "source": "common knowledge",
+          "confidence": 1.0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "supports:e1->c1",
+          "source": "e1",
+          "target": "c1",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "implies:c1->c2",
+          "source": "c1",
+          "target": "c2",
+          "type": "implies"
+        }
+      },
+      {
+        "data": {
+          "id": "depends-on:a1->c2",
+          "source": "a1",
+          "target": "c2",
+          "type": "depends-on"
+        }
+      }
+    ]
+  }
+}

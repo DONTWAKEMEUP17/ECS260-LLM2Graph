@@ -1,0 +1,52 @@
+{
+  "text": "The implementation of shortest_paths is incorrect. It tries to update edge weights instead of node weights during relaxation, causing no updates to weight_by_node, so results remain infinite except the source. Tests fail because the output distances do not match expected shortest path distances.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "The shortest_paths function incorrectly updates edge weights instead of node distances.",
+          "type": "Claim",
+          "source": "code:shortest_paths.py#L5-L14",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "This incorrect update leads to all nodes except the source having infinite distance in the output.",
+          "type": "Claim",
+          "source": "test_shortest_paths.txt#test failures",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "c3",
+          "label": "Test cases fail because output does not match expected shortest path distances.",
+          "type": "Claim",
+          "source": "test_shortest_paths.txt#test failures",
+          "confidence": 0.95
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "implies:c1->c2",
+          "source": "c1",
+          "target": "c2",
+          "type": "implies"
+        }
+      },
+      {
+        "data": {
+          "id": "implies:c2->c3",
+          "source": "c2",
+          "target": "c3",
+          "type": "implies"
+        }
+      }
+    ]
+  }
+}
