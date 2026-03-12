@@ -19,6 +19,18 @@
     .selector { margin-bottom: 14px; }
     .selector label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
     .selector select { width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; }
+    details { margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    details summary { padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; background: #f9fafb; user-select: none; }
+    details summary:hover { background: #f3f4f6; }
+    details .legend-body { padding: 10px 12px; font-size: 12px; color: #374151; }
+    .legend-section { margin-bottom: 10px; }
+    .legend-section h4 { margin: 0 0 6px 0; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
+    .legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .swatch { width: 22px; height: 16px; border-radius: 4px; border: 2px solid; flex-shrink: 0; }
+    .swatch.diamond { transform: rotate(45deg); border-radius: 2px; width: 14px; height: 14px; margin: 0 4px; }
+    .edge-line { width: 28px; height: 3px; flex-shrink: 0; border-radius: 2px; }
+    .edge-line.dashed { background: repeating-linear-gradient(90deg,#ef4444 0 5px,transparent 5px 9px); }
+    .edge-line.dotted { background: repeating-linear-gradient(90deg,#f97316 0 2px,transparent 2px 6px); }
   </style>
 </head>
 <body>
@@ -30,8 +42,56 @@
       </div>
       <h2>Explanation</h2>
       <div id="explain" class="card">Loading…</div>
-      <div class="hint">Tip: click a node to see details here.</div>
+      <div class="hint">Tip: click a node to highlight its connections.</div>
       <div id="nodeDetail" class="meta"></div>
+
+      <details>
+        <summary>Legend &amp; Guide</summary>
+        <div class="legend-body">
+          <div class="legend-section">
+            <h4>Node Types</h4>
+            <div class="legend-row">
+              <div class="swatch" style="background:#dbeafe;border-color:#3b82f6;"></div>
+              <span><strong>Claim</strong> — a main assertion about the bug or its cause</span>
+            </div>
+            <div class="legend-row">
+              <div class="swatch" style="background:#dcfce7;border-color:#22c55e;"></div>
+              <span><strong>Evidence</strong> — test output or code observations that support or refute a claim</span>
+            </div>
+            <div class="legend-row">
+              <div class="swatch diamond" style="background:#fef9c3;border-color:#eab308;"></div>
+              <span><strong>Assumption</strong> — an underlying principle or requirement taken for granted</span>
+            </div>
+          </div>
+          <div class="legend-section">
+            <h4>Edge Types</h4>
+            <div class="legend-row">
+              <div class="edge-line" style="background:#22c55e;"></div>
+              <span><strong>supports</strong> — evidence backs up the claim</span>
+            </div>
+            <div class="legend-row">
+              <div class="edge-line dashed"></div>
+              <span><strong>contradicts</strong> — evidence conflicts with the claim</span>
+            </div>
+            <div class="legend-row">
+              <div class="edge-line dotted"></div>
+              <span><strong>depends-on</strong> — one node logically requires another</span>
+            </div>
+            <div class="legend-row">
+              <div class="edge-line" style="background:#8b5cf6;"></div>
+              <span><strong>implies</strong> — one statement leads to another</span>
+            </div>
+          </div>
+          <div class="legend-section">
+            <h4>Interaction</h4>
+            <div style="line-height:1.7">
+              Click a node to highlight its direct neighbors.<br>
+              Click the background to reset.<br>
+              Scroll to zoom · drag to pan.
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
     <div class="right">
       <div id="cy"></div>
@@ -58,41 +118,80 @@
             selector: "node",
             style: {
               "label": "data(label)",
+              "text-valign": "center",
+              "text-halign": "center",
               "text-wrap": "wrap",
-              "text-max-width": 220,
-              "font-size": 10,
-              "padding": 8,
+              "text-max-width": 160,
+              "font-size": 11,
+              "padding": 14,
+              "width": "label",
+              "height": "label",
               "shape": "round-rectangle",
-              "border-width": 1
+              "border-width": 2,
+              "border-color": "#999",
+              "background-color": "#f0f0f0",
+              "color": "#111"
             }
           },
-          { selector: 'node[type="Claim"]', style: { "border-width": 2 } },
-          { selector: 'node[type="Evidence"]', style: { "shape": "round-rectangle" } },
-          { selector: 'node[type="Assumption"]', style: { "shape": "diamond" } },
+          {
+            selector: 'node[type="Claim"]',
+            style: {
+              "background-color": "#dbeafe",
+              "border-color": "#3b82f6",
+              "border-width": 3,
+              "font-weight": "bold"
+            }
+          },
+          {
+            selector: 'node[type="Evidence"]',
+            style: {
+              "background-color": "#dcfce7",
+              "border-color": "#22c55e"
+            }
+          },
+          {
+            selector: 'node[type="Assumption"]',
+            style: {
+              "background-color": "#fef9c3",
+              "border-color": "#eab308",
+              "shape": "diamond"
+            }
+          },
 
           {
             selector: "edge",
             style: {
               "curve-style": "bezier",
               "target-arrow-shape": "triangle",
-              "arrow-scale": 0.9,
+              "arrow-scale": 1,
               "label": "data(type)",
-              "font-size": 9,
+              "font-size": 10,
               "text-rotation": "autorotate",
-              "text-margin-y": -8,
-              "width": 2
+              "text-margin-y": -10,
+              "text-background-color": "#fff",
+              "text-background-opacity": 0.85,
+              "text-background-padding": "3px",
+              "width": 2,
+              "line-color": "#aaa",
+              "target-arrow-color": "#aaa"
             }
           },
+          { selector: 'edge[type="supports"]',    style: { "line-style": "solid",  "line-color": "#22c55e", "target-arrow-color": "#22c55e" } },
+          { selector: 'edge[type="contradicts"]', style: { "line-style": "dashed", "line-color": "#ef4444", "target-arrow-color": "#ef4444" } },
+          { selector: 'edge[type="depends-on"]',  style: { "line-style": "dotted", "line-color": "#f97316", "target-arrow-color": "#f97316" } },
+          { selector: 'edge[type="implies"]',     style: { "line-style": "solid",  "line-color": "#8b5cf6", "target-arrow-color": "#8b5cf6" } },
 
-          { selector: 'edge[type="supports"]', style: { "line-style": "solid" } },
-          { selector: 'edge[type="contradicts"]', style: { "line-style": "dashed" } },
-          { selector: 'edge[type="depends-on"]', style: { "line-style": "dotted" } },
-          { selector: 'edge[type="implies"]', style: { "line-style": "solid" } },
-
-          { selector: ".highlight", style: { "border-width": 4 } },
-          { selector: ".dim", style: { "opacity": 0.2 } },
+          { selector: ".highlight", style: { "border-width": 5, "border-color": "#f59e0b" } },
+          { selector: ".dim", style: { "opacity": 0.15 } },
         ],
-        layout: { name: "cose", animate: false }
+        layout: {
+          name: "breadthfirst",
+          directed: true,
+          spacingFactor: 1.75,
+          padding: 40,
+          nodeDimensionsIncludeLabels: true,
+          avoidOverlap: true
+        }
       });
 
       // Click node -> show details + highlight neighborhood

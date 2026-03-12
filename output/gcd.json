@@ -1,32 +1,32 @@
 {
-  "text": "The gcd function implementation is incorrect because it fails to swap the arguments in the recursive call, causing infinite recursion and eventually a RecursionError. Specifically, it always recurses with gcd(a % b, b) instead of gcd(b, a % b), which is the correct Euclidean algorithm step. This causes the function not to progress towards the base case when b != 0, leading to all tests failing except possibly trivial ones.",
+  "text": "The gcd function implementation is incorrect because it causes infinite recursion and never reaches the base case when b != 0. The recursive call should swap the arguments to gcd(b, a % b) instead of gcd(a % b, b). This bug leads to maximum recursion depth exceeded errors in the tests.",
   "elements": {
     "nodes": [
       {
         "data": {
           "id": "c1",
-          "label": "The gcd function causes infinite recursion and fails tests",
+          "label": "The gcd function causes infinite recursion and fails the tests.",
           "type": "Claim",
-          "source": "test_gcd.txt",
-          "confidence": 0.9
+          "source": "code:gcd.py#L1-L7,test_gcd.txt#failures",
+          "confidence": 0.95
         }
       },
       {
         "data": {
           "id": "c2",
-          "label": "Incorrect argument order in recursive call gcd(a % b, b) leads to non-termination",
+          "label": "The recursive call in gcd should be gcd(b, a % b) not gcd(a % b, b).",
           "type": "Claim",
-          "source": "gcd.py",
+          "source": "code:gcd.py#L5,test_gcd.txt#error",
           "confidence": 0.95
         }
       },
       {
         "data": {
           "id": "a1",
-          "label": "Correct gcd uses gcd(b, a % b) in recursion",
+          "label": "Correct gcd algorithm uses gcd(b, a % b) recursion step.",
           "type": "Assumption",
-          "source": "standard algorithm",
-          "confidence": 0.95
+          "source": "spec,general knowledge",
+          "confidence": 0.9
         }
       }
     ],
@@ -41,10 +41,10 @@
       },
       {
         "data": {
-          "id": "contradicts:a1->c2",
+          "id": "supports:a1->c2",
           "source": "a1",
           "target": "c2",
-          "type": "contradicts"
+          "type": "supports"
         }
       }
     ]
