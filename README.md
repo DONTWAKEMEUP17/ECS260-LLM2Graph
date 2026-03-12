@@ -41,35 +41,45 @@ export OPENAI_API_KEY="YOUR_API_KEY"
 
 ---
 
-## Auto-Pipeline Work:
+## Quick Start (recommended)
+
+Run everything with a single command — installs deps, generates graphs, starts server, and opens the browser automatically:
 
 ```bash
-python pipeline.py # run this first
-python -m http.server 8000
+python run.py
+```
+
+First run will prompt for your OpenAI API key and offer to save it to `.env` for future runs.
+
+### Options
+
+```bash
+python run.py              # QuixBugs cases only (test_case/)
+python run.py --swe        # also fetch & process SWE-bench Lite cases
+python run.py --no-pipeline  # skip generation, just view existing output
+python run.py --dir <path>   # process a custom input directory
 ```
 
 ---
 
-## Generate Graph JSON
+## Manual Steps (advanced)
+
+### Generate graphs
 
 ```bash
-python main.py
+python pipeline.py                        # QuixBugs → output/
+python pipeline.py --dir swe_cases --out output_swe  # SWE-bench → output_swe/
 ```
 
-##  View Visualization
-start a local server:
+### View visualization
 
 ```bash
 python -m http.server 8000
+# open http://localhost:8000/index.html
 ```
 
-open:
-
-```bash
-http://localhost:8000/index.html
-```
-then u can see the graph
+---
 
 ## Notes
-Do not commit your API key.
+Do not commit your API key. Use a `.env` file (added to `.gitignore`) instead.
 

@@ -1,40 +1,44 @@
 {
-  "text": "The implementation of topological_ordering is incorrect because it only initializes ordered_nodes with nodes having no incoming edges and then tries to append nodes whose outgoing nodes are subsets of ordered_nodes. This process does not correctly capture the dependencies for a full topological sort, leading to missing nodes and an incorrect order, as shown by the failed tests.",
+  "text": "The topological_ordering function incorrectly orders nodes, failing multiple test cases due to incomplete traversal logic. It initially selects nodes with no incoming edges, but only appends next nodes if all their outgoing nodes are already in the ordered list, which prematurely terminates ordering and misses nodes. Thus, it fails to produce a correct topological order as defined.",
+  "sources": {
+    "test_topological_ordering.txt": "python_testcases/test_topological_ordering.py FFF                                                                                                                        [100%]\n\n=================================================================================== FAILURES ===================================================================================\n____________________________________________________________________________________ test1 _____________________________________________________________________________________\n\n    def test1():\n        \"\"\"Case 1: Wikipedia graph\n        Output: 5 7 3 11 8 10 2 9\n        \"\"\"\n    \n        five = Node(5)\n        seven = Node(7)\n        three = Node(3)\n        eleven = Node(11)\n        eight = Node(8)\n        two = Node(2)\n        nine = Node(9)\n        ten = Node(10)\n    \n        five.outgoing_nodes = [eleven]\n        seven.outgoing_nodes = [eleven, eight]\n        three.outgoing_nodes = [eight, ten]\n        eleven.incoming_nodes = [five, seven]\n        eleven.outgoing_nodes = [two, nine, ten]\n        eight.incoming_nodes = [seven, three]\n        eight.outgoing_nodes = [nine]\n        two.incoming_nodes = [eleven]\n        nine.incoming_nodes = [eleven, eight]\n        ten.incoming_nodes = [eleven, three]\n    \n        result = [\n            x.value\n            for x in topological_ordering(\n                [five, seven, three, eleven, eight, two, nine, ten]\n            )\n        ]\n    \n>       assert result == [5, 7, 3, 11, 8, 10, 2, 9]\nE       assert [5, 7, 3, 10] == [5, 7, 3, 11, 8, 10, ...]\nE         \nE         At index 3 diff: 10 != 11\nE         Right contains 4 more items, first extra item: 8\nE         Use -v to get more diff\n\npython_testcases/test_topological_ordering.py:42: AssertionError\n____________________________________________________________________________________ test2 _____________________________________________________________________________________\n\n    def test2():\n        \"\"\"Case 2: GeekforGeeks example\n        Output: 4 5 0 2 3 1\n        \"\"\"\n    \n        five = Node(5)\n        zero = Node(0)\n        four = Node(4)\n        one = Node(1)\n        two = Node(2)\n        three = Node(3)\n    \n        five.outgoing_nodes = [two, zero]\n        four.outgoing_nodes = [zero, one]\n        two.incoming_nodes = [five]\n        two.outgoing_nodes = [three]\n        zero.incoming_nodes = [five, four]\n        one.incoming_nodes = [four, three]\n        three.incoming_nodes = [two]\n        three.outgoing_nodes = [one]\n    \n        result = [\n            x.value for x in topological_ordering([zero, one, two, three, four, five])\n        ]\n    \n>       assert result == [4, 5, 0, 2, 3, 1]\nE       assert [4, 5, 0, 1] == [4, 5, 0, 2, 3, 1]\nE         \nE         At index 3 diff: 1 != 2\nE         Right contains 2 more items, first extra item: 3\nE         Use -v to get more diff\n\npython_testcases/test_topological_ordering.py:70: AssertionError\n____________________________________________________________________________________ test3 _____________________________________________________________________________________\n\n    def test3():\n        \"\"\"Case 3: Cooking with InteractivePython\"\"\"\n    \n        milk = Node(\"3/4 cup milk\")\n        egg = Node(\"1 egg\")\n        oil = Node(\"1 Tbl oil\")\n        mix = Node(\"1 cup mix\")\n        syrup = Node(\"heat syrup\")\n        griddle = Node(\"heat griddle\")\n        pour = Node(\"pour 1/4 cup\")\n        turn = Node(\"turn when bubbly\")\n        eat = Node(\"eat\")\n    \n        milk.outgoing_nodes = [mix]\n        egg.outgoing_nodes = [mix]\n        oil.outgoing_nodes = [mix]\n        mix.incoming_nodes = [milk, egg, oil]\n        mix.outgoing_nodes = [syrup, pour]\n        griddle.outgoing_nodes = [pour]\n        pour.incoming_nodes = [mix, griddle]\n        pour.outgoing_nodes = [turn]\n        turn.incoming_nodes = [pour]\n        turn.outgoing_nodes = [eat]\n        syrup.incoming_nodes = [mix]\n        syrup.outgoing_nodes = [eat]\n        eat.incoming_nodes = [syrup, turn]\n    \n        result = [\n            x.value\n            for x in topological_ordering(\n                [milk, egg, oil, mix, syrup, griddle, pour, turn, eat]\n            )\n        ]\n    \n        expected = [\n            \"3/4 cup milk\",\n            \"1 egg\",\n            \"1 Tbl oil\",\n            \"heat griddle\",\n            \"1 cup mix\",\n            \"pour 1/4 cup\",\n            \"heat syrup\",\n            \"turn when bubbly\",\n            \"eat\",\n        ]\n>       assert result == expected\nE       AssertionError: assert ['3/4 cup mil...heat griddle'] == ['3/4 cup mil...1/4 cup', ...]\nE         \nE         Right contains 5 more items, first extra item: '1 cup mix'\nE         Use -v to get more diff\n\npython_testcases/test_topological_ordering.py:118: AssertionError\n=========================================================================== short test summary info ============================================================================\nFAILED python_testcases/test_topological_ordering.py::test1 - assert [5, 7, 3, 10] == [5, 7, 3, 11, 8, 10, ...]\nFAILED python_testcases/test_topological_ordering.py::test2 - assert [4, 5, 0, 1] == [4, 5, 0, 2, 3, 1]\nFAILED python_testcases/test_topological_ordering.py::test3 - AssertionError: assert ['3/4 cup mil...heat griddle'] == ['3/4 cup mil...1/4 cup', ...]\n============================================================================== 3 failed in 0.05s ===============================================================================",
+    "topological_ordering.py": "def topological_ordering(nodes):\n    ordered_nodes = [node for node in nodes if not node.incoming_nodes]\n\n    for node in ordered_nodes:\n        for nextnode in node.outgoing_nodes:\n            if set(ordered_nodes).issuperset(nextnode.outgoing_nodes) and nextnode not in ordered_nodes:\n                ordered_nodes.append(nextnode)\n\n    return ordered_nodes\n\n\"\"\"\nTopological Sort\n\nInput:\n    nodes: A list of directed graph nodes\n\nPrecondition:\n    The input graph is acyclic\n\nOutput:\n    An OrderedSet containing the elements of nodes in an order that puts each node before all the nodes it has edges to\n\"\"\"\n"
+  },
   "elements": {
     "nodes": [
       {
         "data": {
           "id": "c1",
-          "label": "topological_ordering function produces incorrect topological order",
+          "label": "topological_ordering produces incorrect node order for acyclic graphs",
           "type": "Claim",
-          "source": "test output failure cases",
-          "confidence": 0.9
+          "source": "test_topological_ordering.txt:L3-L130",
+          "confidence": 0.95
         }
       },
       {
         "data": {
           "id": "e1",
-          "label": "Tests fail with missing nodes and wrong order in results",
+          "label": "Test failures show output list shorter and with nodes out of order compared to expected",
           "type": "Evidence",
-          "source": "test_topological_ordering.txt",
-          "confidence": 1.0
+          "source": "test_topological_ordering.txt:L3-L130",
+          "confidence": 0.99
         }
       },
       {
         "data": {
-          "id": "e2",
-          "label": "ordered_nodes initialization only includes nodes without incoming edges",
-          "type": "Evidence",
-          "source": "code topological_ordering.py lines 2-4",
-          "confidence": 0.9
+          "id": "c2",
+          "label": "topological_ordering logic only adds node if its outgoing nodes are already ordered",
+          "type": "Claim",
+          "source": "topological_ordering.py:L2-L10",
+          "confidence": 0.99
         }
       },
       {
         "data": {
-          "id": "e3",
-          "label": "Appending nodes based on subset condition does not guarantee correct dependency resolution",
-          "type": "Evidence",
-          "source": "code topological_ordering.py lines 6-8",
+          "id": "c3",
+          "label": "Incomplete traversal that does not enqueue nodes properly causes missed nodes and order errors",
+          "type": "Claim",
+          "source": "inferred from code and tests",
           "confidence": 0.9
         }
       }
@@ -50,16 +54,16 @@
       },
       {
         "data": {
-          "id": "supports:e2->c1",
-          "source": "e2",
-          "target": "c1",
-          "type": "supports"
+          "id": "implies:c2->c3",
+          "source": "c2",
+          "target": "c3",
+          "type": "implies"
         }
       },
       {
         "data": {
-          "id": "supports:e3->c1",
-          "source": "e3",
+          "id": "supports:c3->c1",
+          "source": "c3",
           "target": "c1",
           "type": "supports"
         }

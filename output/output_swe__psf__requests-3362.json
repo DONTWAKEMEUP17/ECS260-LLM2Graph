@@ -1,67 +1,79 @@
 {
-  "text": "The patch modifies the stream_decode_response_unicode function to correctly handle the response encoding by using r.encoding or falling back to r.apparent_encoding if r.encoding is None. It adds proper error handling during decoder creation and ensures decoding uses the correct encoding, which resolves confusion when iter_content with decode_unicode=True returns bytes instead of unicode in some cases. This aligns iter_content behavior with expectations and the r.text property.",
+  "text": "The patch fixes the function `stream_decode_response_unicode` to handle response encoding properly. Previously, if encoding was None, it just yielded raw bytes, causing `iter_content(decode_unicode=True)` to return bytes instead of decoded unicode strings. Now, it falls back to `apparent_encoding` if `r.encoding` is None, attempts to get an incremental decoder for that encoding, and then decodes chunks to yield unicode strings as expected. This addresses the issue where `iter_content(decode_unicode=True)` was returning bytes instead of unicode when `r.encoding` was None, aligning its behavior closer to `r.text`.",
+  "sources": {
+    "test_psf__requests-3362.txt": "[ISSUE / BUG REPORT]\nUncertain about content/text vs iter_content(decode_unicode=True/False)\nWhen requesting an application/json document, I'm seeing `next(r.iter_content(16*1024, decode_unicode=True))` returning bytes, whereas `r.text` returns unicode. My understanding was that both should return a unicode object. In essence, I thought \"iter_content\" was equivalent to \"iter_text\" when decode_unicode was True. Have I misunderstood something? I can provide an example if needed.\n\nFor reference, I'm using python 3.5.1 and requests 2.10.0.\n\nThanks!\n\n[FAILING TESTS]\n  FAIL  [\"tests/test_requests.py::TestRequests::test_response_decode_unicode\"]\n\n[PASSING TESTS (sample)]\n  PASS  [\"tests/test_requests.py::TestRequests::test_entry_points\", \"tests/test_requests.py::TestRequests::test_invalid_url[MissingSchema-hiwpefhipowhefopw]\", \"tests/test_requests.py::TestRequests::test_invalid_url[InvalidSchema-localhost:3128]\", \"tests/test_requests.py::TestRequests::test_invalid_url[InvalidSchema-localhost.localdomain:3128/]\", \"tests/test_requests.py::TestRequests::test_invalid_url[InvalidSchema-10.122.1.1:3128/]\", \"tests/test_requests.py::TestRequests::test_invalid_url[InvalidURL-http://]\", \"tests/test_requests.py::TestRequests::test_basic_building\", \"tests/test_requests.py::TestRequests::test_path_is_not_double_encoded\", \"tests/test_requests.py::TestRequests::test_params_are_added_before_fragment[http://example.com/path#fragment-http://example.com/path?a=b#fragment]\", \"tests/test_requests.py::TestRequests::test_params_are_added_before_fragment[http://example.com/path?key=value#fragment-http://example.com/path?key=value&a=b#fragment]\", \"tests/test_requests.py::TestRequests::test_params_original_order_is_preserved_by_default\", \"tests/test_requests.py::TestRequests::test_params_bytes_are_encoded\", \"tests/test_requests.py::TestRequests::test_binary_put\", \"tests/test_requests.py::TestRequests::test_errors[http://doesnotexist.google.com-ConnectionError]\", \"tests/test_requests.py::TestRequests::test_errors[http://localhost:1-ConnectionError]\", \"tests/test_requests.py::TestRequests::test_errors[http://fe80::5054:ff:fe5a:fc0-InvalidURL]\", \"tests/test_requests.py::TestRequests::test_proxy_error\", \"tests/test_requests.py::TestRequests::test_non_prepared_request_error\", \"tests/test_requests.py::TestRequests::test_prepare_request_with_bytestring_url\", \"tests/test_requests.py::TestRequests::test_links\", \"tests/test_requests.py::TestRequests::test_cookie_parameters\", \"tests/test_requests.py::TestRequests::test_cookie_as_dict_keeps_len\", \"tests/test_requests.py::TestRequests::test_cookie_as_dict_keeps_items\", \"tests/test_requests.py::TestRequests::test_cookie_as_dict_keys\", \"tests/test_requests.py::TestRequests::test_cookie_as_dict_values\", \"tests/test_requests.py::TestRequests::test_cookie_as_dict_items\", \"tests/test_requests.py::TestRequests::test_cookie_duplicate_names_different_domains\", \"tests/test_requests.py::TestRequests::test_cookie_duplicate_names_raises_cookie_conflict_error\", \"tests/test_requests.py::TestRequests::test_response_is_iterable\", \"tests/test_requests.py::TestRequests::test_response_chunk_size_int\", \"tests/test_requests.py::TestRequests::test_http_error\", \"tests/test_requests.py::TestRequests::test_transport_adapter_ordering\", \"tests/test_requests.py::TestRequests::test_long_authinfo_in_url\", \"tests/test_requests.py::TestRequests::test_nonhttp_schemes_dont_check_URLs\", \"tests/test_requests.py::TestRequests::test_basic_auth_str_is_always_native\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_init[cid0]\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_init[cid1]\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_init[cid2]\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_docstring_example\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_len\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_getitem\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_fixes_649\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_delitem\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_contains\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_get\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_update\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_update_retains_unchanged\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_iter\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_equality\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_setdefault\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_lower_items\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_preserve_key_case\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_preserve_last_key_case\", \"tests/test_requests.py::TestCaseInsensitiveDict::test_copy\", \"tests/test_requests.py::TestMorselToCookieExpires::test_expires_valid_str\", \"tests/test_requests.py::TestMorselToCookieExpires::test_expires_invalid_int[100-TypeError]\", \"tests/test_requests.py::TestMorselToCookieExpires::test_expires_invalid_int[woops-ValueError]\", \"tests/test_requests.py::TestMorselToCookieExpires::test_expires_none\", \"tests/test_requests.py::TestMorselToCookieMaxAge::test_max_age_valid_int\", \"tests/test_requests.py::TestMorselToCookieMaxAge::test_max_age_invalid_str\", \"tests/test_requests.py::TestTimeout::test_connect_timeout\", \"tests/test_requests.py::TestTimeout::test_total_timeout_connect\", \"tests/test_requests.py::test_json_encodes_as_bytes\", \"tests/test_requests.py::test_proxy_env_vars_override_default[http_proxy-http://example.com-socks5://proxy.com:9876]\", \"tests/test_requests.py::test_proxy_env_vars_override_default[https_proxy-https://example.com-socks5://proxy.com:9876]\", \"tests/test_requests.py::test_proxy_env_vars_override_default[all_proxy-http://example.com-socks5://proxy.com:9876]\", \"tests/test_requests.py::test_proxy_env_vars_override_default[all_proxy-https://example.com-socks5://proxy.com:9876]\", \"tests/test_requests.py::test_data_argument_accepts_tuples[data0]\", \"tests/test_requests.py::test_data_argument_accepts_tuples[data1]\", \"tests/test_requests.py::test_data_argument_accepts_tuples[data2]\", \"tests/test_requests.py::test_prepared_copy[None]\", \"tests/test_requests.py::test_prepared_copy[kwargs1]\", \"tests/test_requests.py::test_prepared_copy[kwargs2]\", \"tests/test_requests.py::test_prepared_copy[kwargs3]\", \"tests/test_requests.py::test_vendor_aliases\"]\n\n[PATCH DIFF]\ndiff --git a/requests/utils.py b/requests/utils.py\n--- a/requests/utils.py\n+++ b/requests/utils.py\n@@ -358,13 +358,20 @@ def get_encoding_from_headers(headers):\n \n def stream_decode_response_unicode(iterator, r):\n     \"\"\"Stream decodes a iterator.\"\"\"\n+    encoding = r.encoding\n \n-    if r.encoding is None:\n-        for item in iterator:\n-            yield item\n-        return\n+    if encoding is None:\n+        encoding = r.apparent_encoding\n+\n+    try:\n+        decoder = codecs.getincrementaldecoder(encoding)(errors='replace')\n+    except (LookupError, TypeError):\n+        # A LookupError is raised if the encoding was not found which could\n+        # indicate a misspelling or similar mistake.\n+        #\n+        # A TypeError can be raised if encoding is None\n+        raise UnicodeError(\"Unable to decode contents with encoding %s.\" % encoding)\n \n-    decoder = codecs.getincrementaldecoder(r.encoding)(errors='replace')\n     for chunk in iterator:\n         rv = decoder.decode(chunk)\n         if rv:\n",
+    "utils.py": "# -*- coding: utf-8 -*-\n\n\"\"\"\nrequests.utils\n~~~~~~~~~~~~~~\n\nThis module provides utility functions that are used within Requests\nthat are also useful for external consumption.\n\n\"\"\"\n\nimport cgi\nimport codecs\nimport collections\nimport io\nimport os\nimport re\nimport socket\nimport struct\nimport warnings\n\nfrom . import __version__\nfrom . import certs\nfrom .compat import parse_http_list as _parse_list_header\nfrom .compat import (quote, urlparse, bytes, str, OrderedDict, unquote, is_py2,\n                     builtin_str, getproxies, proxy_bypass, urlunparse,\n                     basestring)\nfrom .cookies import RequestsCookieJar, cookiejar_from_dict\nfrom .structures import CaseInsensitiveDict\nfrom .exceptions import InvalidURL, FileModeWarning\n\n_hush_pyflakes = (RequestsCookieJar,)\n\nNETRC_FILES = ('.netrc', '_netrc')\n\nDEFAULT_CA_BUNDLE_PATH = certs.where()\n\n\ndef dict_to_sequence(d):\n    \"\"\"Returns an internal sequence dictionary update.\"\"\"\n\n    if hasattr(d, 'items'):\n        d = d.items()\n\n    return d\n\n\ndef super_len(o):\n    total_length = 0\n    current_position = 0\n\n    if hasattr(o, '__len__'):\n        total_length = len(o)\n\n    elif hasattr(o, 'len'):\n        total_length = o.len\n\n    elif hasattr(o, 'getvalue'):\n        # e.g. BytesIO, cStringIO.StringIO\n        total_length = len(o.getvalue())\n\n    elif hasattr(o, 'fileno'):\n        try:\n            fileno = o.fileno()\n        except io.UnsupportedOperation:\n            pass\n        else:\n            total_length = os.fstat(fileno).st_size\n\n            # Having used fstat to determine the file length, we need to\n            # confirm that this file was opened up in binary mode.\n            if 'b' not in o.mode:\n                warnings.warn((\n                    \"Requests has determined the content-length for this \"\n                    \"request using the binary size of the file: however, the \"\n                    \"file has been opened in text mode (i.e. without the 'b' \"\n                    \"flag in the mode). This may lead to an incorrect \"\n                    \"content-length. In Requests 3.0, support will be removed \"\n                    \"for files in text mode.\"),\n                    FileModeWarning\n                )\n\n    if hasattr(o, 'tell'):\n        try:\n            current_position = o.tell()\n        except (OSError, IOError):\n            # This can happen in some weird situations, such as when the file\n            # is actually a special file descriptor like stdin. In this\n            # instance, we don't know what the length is, so set it to zero and\n            # let requests chunk it instead.\n            current_position = total_length\n\n    return max(0, total_length - current_position)\n\n\ndef get_netrc_auth(url, raise_errors=False):\n    \"\"\"Returns the Requests tuple auth for a given url from netrc.\"\"\"\n\n    try:\n        from netrc import netrc, NetrcParseError\n\n        netrc_path = None\n\n        for f in NETRC_FILES:\n            try:\n                loc = os.path.expanduser('~/{0}'.format(f))\n            except KeyError:\n                # os.path.expanduser can fail when $HOME is undefined and\n                # getpwuid fails. See http://bugs.python.org/issue20164 &\n                # https://github.com/kennethreitz/requests/issues/1846\n                return\n\n            if os.path.exists(loc):\n                netrc_path = loc\n                break\n\n        # Abort early if there isn't one.\n        if netrc_path is None:\n            return\n\n        ri = urlparse(url)\n\n        # Strip port numbers from netloc. This weird `if...encode`` dance is\n        # used for Python 3.2, which doesn't support unicode literals.\n        splitstr = b':'\n        if isinstance(url, str):\n            splitstr = splitstr.decode('ascii')\n        host = ri.netloc.split(splitstr)[0]\n\n        try:\n            _netrc = netrc(netrc_path).authenticators(host)\n            if _netrc:\n                # Return with login / password\n                login_i = (0 if _netrc[0] else 1)\n                return (_netrc[login_i], _netrc[2])\n        except (NetrcParseError, IOError):\n            # If there was a parsing error or a permissions issue reading the file,\n            # we'll just skip netrc auth unless explicitly asked to raise errors.\n            if raise_errors:\n                raise\n\n    # AppEngine hackiness.\n    except (ImportError, AttributeError):\n        pass\n\n\ndef guess_filename(obj):\n    \"\"\"Tries to guess the filename of the given object.\"\"\"\n    name = getattr(obj, 'name', None)\n    if (name and isinstance(name, basestring) and name[0] != '<' and\n            name[-1] != '>'):\n        return os.path.basename(name)\n\n\ndef from_key_val_list(value):\n    \"\"\"Take an object and test to see if it can be represented as a\n    dictionary. Unless it can not be represented as such, return an\n    OrderedDict, e.g.,\n\n    ::\n\n        >>> from_key_val_list([('key', 'val')])\n        OrderedDict([('key', 'val')])\n        >>> from_key_val_list('string')\n        ValueError: need more than 1 value to unpack\n        >>> from_key_val_list({'key': 'val'})\n        OrderedDict([('key', 'val')])\n    \"\"\"\n    if value is None:\n        return None\n\n    if isinstance(value, (str, bytes, bool, int)):\n        raise ValueError('cannot encode objects that are not 2-tuples')\n\n    return OrderedDict(value)\n\n\ndef to_key_val_list(value):\n    \"\"\"Take an object and test to see if it can be represented as a\n    dictionary. If it can be, return a list of tuples, e.g.,\n\n    ::\n\n        >>> to_key_val_list([('key', 'val')])\n        [('key', 'val')]\n        >>> to_key_val_list({'key': 'val'})\n        [('key', 'val')]\n        >>> to_key_val_list('string')\n        ValueError: cannot encode objects that are not 2-tuples.\n    \"\"\"\n    if value is None:\n        return None\n\n    if isinstance(value, (str, bytes, bool, int)):\n        raise ValueError('cannot encode objects that are not 2-tuples')\n\n    if isinstance(value, collections.Mapping):\n        value = value.items()\n\n    return list(value)\n\n\n# Fro\n... [truncated at 6000 chars]"
+  },
   "elements": {
     "nodes": [
       {
         "data": {
           "id": "c1",
-          "label": "iter_content(decode_unicode=True) should return unicode objects similar to r.text.",
+          "label": "iter_content(decode_unicode=True) should yield unicode strings, not bytes",
           "type": "Claim",
-          "source": "user report and understanding of expected behavior",
+          "source": "test_psf__requests-3362.txt:L3-L16",
           "confidence": 0.9
         }
       },
       {
         "data": {
           "id": "c2",
-          "label": "The original stream_decode_response_unicode function used r.encoding directly without fallback, lacking error handling.",
+          "label": "stream_decode_response_unicode returns bytes if r.encoding is None",
           "type": "Claim",
-          "source": "requests/utils.py before patch",
+          "source": "requests/utils.py:L357-L369",
           "confidence": 0.9
         }
       },
       {
         "data": {
           "id": "c3",
-          "label": "The patched stream_decode_response_unicode uses r.encoding, falls back to r.apparent_encoding, and adds decoding error handling.",
+          "label": "Patch changes stream_decode_response_unicode to use r.apparent_encoding when r.encoding is None and decode chunks accordingly",
           "type": "Claim",
-          "source": "patch diff in requests/utils.py",
+          "source": "requests/utils.py:L357-L391",
           "confidence": 1.0
         }
       },
       {
         "data": {
           "id": "c4",
-          "label": "The patch fixes issues where iter_content(decode_unicode=True) returns bytes instead of unicode, making it consistent with r.text.",
+          "label": "After patch, iter_content(decode_unicode=True) yields unicode strings as expected",
           "type": "Claim",
-          "source": "user issue report and patch effect",
-          "confidence": 0.95
+          "source": "test_psf__requests-3362.txt:L3-L16",
+          "confidence": 0.8
         }
       }
     ],
     "edges": [
       {
         "data": {
-          "id": "contradicts:c2->c3",
+          "id": "contradicts:c2->c1",
           "source": "c2",
-          "target": "c3",
+          "target": "c1",
           "type": "contradicts"
         }
       },
       {
         "data": {
-          "id": "supports:c3->c4",
+          "id": "contradicts:c3->c2",
           "source": "c3",
-          "target": "c4",
+          "target": "c2",
+          "type": "contradicts"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:c3->c1",
+          "source": "c3",
+          "target": "c1",
           "type": "supports"
         }
       },
       {
         "data": {
-          "id": "depends-on:c1->c4",
-          "source": "c1",
+          "id": "implies:c3->c4",
+          "source": "c3",
           "target": "c4",
-          "type": "depends-on"
+          "type": "implies"
         }
       }
     ]

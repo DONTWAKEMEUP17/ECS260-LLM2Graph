@@ -14,6 +14,28 @@ OUTPUT_DIR = Path("output")
 TEST_CASE_DIR = Path("test_case")
 
 
+def parse_sources(py_file: Path, txt_file: Path) -> dict:
+    """Build a {basename: content} dict for snippet lookup.
+    Handles both plain .py files and multi-file SWE-bench files with [FILE: ...] headers."""
+    sources = {}
+    txt_content = txt_file.read_text(encoding="utf-8")
+    sources[txt_file.name] = txt_content
+
+    py_content = py_file.read_text(encoding="utf-8")
+    # Detect multi-file format (SWE-bench): starts with "[FILE: ...]"
+    if py_content.lstrip().startswith("[FILE:"):
+        import re
+        parts = re.split(r"\[FILE:\s*(.+?)\]\n", py_content)
+        # parts = ["", filename, content, filename, content, ...]
+        it = iter(parts[1:])
+        for fname, content in zip(it, it):
+            sources[fname.strip().split("/")[-1]] = content  # basename only
+    else:
+        sources[py_file.name] = py_content
+
+    return sources
+
+
 def load_pairs(data_dir: Path) -> dict:
     pairs = {}
     py_files = {f.stem: f for f in data_dir.glob("*.py")}
@@ -28,14 +50,16 @@ def load_pairs(data_dir: Path) -> dict:
                 f"[CODE FILE: {py_file.name}]\n{py_content}\n\n"
                 f"[OUTPUT FILE: {txt_file.name}]\n{txt_content}"
             )
-            pairs[py_stem] = {"py": py_file.name, "txt": txt_file.name, "content": combined}
+            sources = parse_sources(py_file, txt_file)
+            pairs[py_stem] = {"py": py_file.name, "txt": txt_file.name, "content": combined, "sources": sources}
     return pairs
 
 
-def to_cyto(out) -> dict:
+def to_cyto(out, sources: dict = None) -> dict:
     data = out.model_dump(mode="json")
-    return {
+    result = {
         "text": data["text"],
+        "sources": sources or {},
         "elements": {
             "nodes": [
                 {
@@ -62,6 +86,7 @@ def to_cyto(out) -> dict:
             ],
         },
     }
+    return result
 
 
 def run_pipeline(data_dir: Path = TEST_CASE_DIR, output_dir: Path = OUTPUT_DIR):
@@ -77,8 +102,9 @@ def run_pipeline(data_dir: Path = TEST_CASE_DIR, output_dir: Path = OUTPUT_DIR):
     for name, pair in pairs.items():
         print(f"[{name}] Processing {pair['py']} + {pair['txt']} ...")
         try:
+            print(f"[{name}] Calling LLM (timeout: 90s)...")
             out = extract_graph(pair["content"])
-            cyto = to_cyto(out)
+            cyto = to_cyto(out, pair.get("sources"))
             out_path = output_dir / f"{name}.json"
             out_path.write_text(json.dumps(cyto, indent=2, ensure_ascii=False), encoding="utf-8")
             node_count = len(cyto["elements"]["nodes"])

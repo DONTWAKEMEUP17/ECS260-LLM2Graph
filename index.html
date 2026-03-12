@@ -31,6 +31,10 @@
     .edge-line { width: 28px; height: 3px; flex-shrink: 0; border-radius: 2px; }
     .edge-line.dashed { background: repeating-linear-gradient(90deg,#ef4444 0 5px,transparent 5px 9px); }
     .edge-line.dotted { background: repeating-linear-gradient(90deg,#f97316 0 2px,transparent 2px 6px); }
+    .snippet-wrap { margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; font-size: 11px; }
+    .snippet-wrap summary { padding: 4px 10px; background: #f3f4f6; cursor: pointer; font-size: 11px; color: #555; user-select: none; }
+    .snippet-wrap pre { margin: 0; padding: 8px 10px; overflow-x: auto; background: #1e1e1e; color: #d4d4d4; line-height: 1.5; }
+    .snippet-wrap .hl { background: #3a3a1a; display: block; }
   </style>
 </head>
 <body>
@@ -100,11 +104,55 @@
 
   <script>
     let cy = null;
+    let currentSources = {};
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    // Parse "filename:L12-L18" or "filename:L5" → {file, start, end} or null
+    function parseSourceRef(src) {
+      if (!src) return null;
+      const m = src.match(/^(.+?):L(\d+)(?:-L?(\d+))?$/i);
+      if (!m) return null;
+      return { file: m[1].trim(), start: parseInt(m[2]), end: m[3] ? parseInt(m[3]) : parseInt(m[2]) };
+    }
+
+    // Look up file content by basename match
+    function findSource(name) {
+      if (!name) return null;
+      const base = name.split("/").pop();
+      for (const [k, v] of Object.entries(currentSources)) {
+        if (k === name || k.split("/").pop() === base || k.endsWith("/" + base)) return v;
+      }
+      return null;
+    }
+
+    function buildSnippet(sourceRef) {
+      const ref = parseSourceRef(sourceRef);
+      if (!ref) return "";
+      const content = findSource(ref.file);
+      if (!content) return "";
+      const lines = content.split("\n");
+      const ctx = 2;  // extra context lines
+      const s = Math.max(0, ref.start - 1 - ctx);
+      const e = Math.min(lines.length, ref.end + ctx);
+      const snippet = lines.slice(s, e).map((line, i) => {
+        const lineNo = s + i + 1;
+        const hl = (lineNo >= ref.start && lineNo <= ref.end) ? ' class="hl"' : '';
+        return `<span${hl}>${String(lineNo).padStart(4," ")}  ${escapeHtml(line)}</span>`;
+      }).join("\n");
+      return `<details class="snippet-wrap">
+        <summary>${escapeHtml(ref.file)} : L${ref.start}${ref.end !== ref.start ? "–" + ref.end : ""}</summary>
+        <pre><code>${snippet}</code></pre>
+      </details>`;
+    }
 
     async function loadGraph(jsonPath) {
       const res = await fetch(jsonPath);
       const data = await res.json();
 
+      currentSources = data.sources ?? {};
       document.getElementById("explain").textContent = data.text ?? "(no text)";
       document.getElementById("nodeDetail").textContent = "";
 
@@ -203,7 +251,8 @@
           `<div><b>Node:</b> <code>${d.id}</code></div>` +
           `<div><b>Type:</b> <code>${d.type ?? ""}</code></div>` +
           `<div><b>Source:</b> <code>${d.source ?? ""}</code></div>` +
-          `<div><b>Confidence:</b> <code>${d.confidence ?? ""}</code></div>`;
+          `<div><b>Confidence:</b> <code>${d.confidence ?? ""}</code></div>` +
+          buildSnippet(d.source);
 
         cy.elements().removeClass("highlight").addClass("dim");
         n.removeClass("dim").addClass("highlight");
