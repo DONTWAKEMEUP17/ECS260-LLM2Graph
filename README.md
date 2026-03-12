@@ -41,6 +41,15 @@ export OPENAI_API_KEY="YOUR_API_KEY"
 
 ---
 
+Auto-Pipeline Version:
+
+```bash
+python pipeline.py # run this first
+python -m http.server 8000
+```
+
+---
+
 ## Generate Graph JSON
 
 ```bash
