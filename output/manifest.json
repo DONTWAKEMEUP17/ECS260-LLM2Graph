@@ -1,0 +1,74 @@
+{
+  "bucketsort": {
+    "status": "ok",
+    "nodes": 5,
+    "edges": 4,
+    "_dir": "output"
+  },
+  "gcd": {
+    "status": "ok",
+    "nodes": 4,
+    "edges": 3,
+    "_dir": "output"
+  },
+  "shortest_paths": {
+    "status": "ok",
+    "nodes": 5,
+    "edges": 5,
+    "_dir": "output"
+  },
+  "topological_ordering": {
+    "status": "ok",
+    "nodes": 4,
+    "edges": 3,
+    "_dir": "output"
+  },
+  "output_swe__django__django-13710": {
+    "status": "ok",
+    "nodes": 4,
+    "edges": 3,
+    "_dir": "output_swe"
+  },
+  "output_swe__matplotlib__matplotlib-23913": {
+    "status": "ok",
+    "nodes": 5,
+    "edges": 4,
+    "_dir": "output_swe"
+  },
+  "output_swe__pallets__flask-4045": {
+    "status": "ok",
+    "nodes": 3,
+    "edges": 2,
+    "_dir": "output_swe"
+  },
+  "output_swe__psf__requests-2317": {
+    "status": "ok",
+    "nodes": 5,
+    "edges": 5,
+    "_dir": "output_swe"
+  },
+  "output_swe__psf__requests-3362": {
+    "status": "ok",
+    "nodes": 4,
+    "edges": 4,
+    "_dir": "output_swe"
+  },
+  "output_swe__pytest-dev__pytest-5103": {
+    "status": "ok",
+    "nodes": 6,
+    "edges": 5,
+    "_dir": "output_swe"
+  },
+  "output_swe__pytest-dev__pytest-7168": {
+    "status": "ok",
+    "nodes": 5,
+    "edges": 4,
+    "_dir": "output_swe"
+  },
+  "output_swe__sympy__sympy-13177": {
+    "status": "ok",
+    "nodes": 5,
+    "edges": 5,
+    "_dir": "output_swe"
+  }
+}

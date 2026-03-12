@@ -16,15 +16,86 @@
     .card { border: 1px solid #eee; border-radius: 10px; padding: 12px; background: #fafafa; }
     .meta { margin-top: 10px; font-size: 12px; color: #444; }
     code { background: #f2f2f2; padding: 2px 6px; border-radius: 6px; }
+    .selector { margin-bottom: 14px; }
+    .selector label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+    .selector select { width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; }
+    details { margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    details summary { padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; background: #f9fafb; user-select: none; }
+    details summary:hover { background: #f3f4f6; }
+    details .legend-body { padding: 10px 12px; font-size: 12px; color: #374151; }
+    .legend-section { margin-bottom: 10px; }
+    .legend-section h4 { margin: 0 0 6px 0; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
+    .legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .swatch { width: 22px; height: 16px; border-radius: 4px; border: 2px solid; flex-shrink: 0; }
+    .swatch.diamond { transform: rotate(45deg); border-radius: 2px; width: 14px; height: 14px; margin: 0 4px; }
+    .edge-line { width: 28px; height: 3px; flex-shrink: 0; border-radius: 2px; }
+    .edge-line.dashed { background: repeating-linear-gradient(90deg,#ef4444 0 5px,transparent 5px 9px); }
+    .edge-line.dotted { background: repeating-linear-gradient(90deg,#f97316 0 2px,transparent 2px 6px); }
+    .snippet-wrap { margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; font-size: 11px; }
+    .snippet-wrap summary { padding: 4px 10px; background: #f3f4f6; cursor: pointer; font-size: 11px; color: #555; user-select: none; }
+    .snippet-wrap pre { margin: 0; padding: 8px 10px; overflow-x: auto; background: #1e1e1e; color: #d4d4d4; line-height: 1.5; }
+    .snippet-wrap .hl { background: #3a3a1a; display: block; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="left">
+      <div class="selector">
+        <label for="bugSelect">Bug Case</label>
+        <select id="bugSelect"><option>Loading…</option></select>
+      </div>
       <h2>Explanation</h2>
       <div id="explain" class="card">Loading…</div>
-      <div class="hint">Tip: click a node to see details here.</div>
+      <div class="hint">Tip: click a node to highlight its connections.</div>
       <div id="nodeDetail" class="meta"></div>
+
+      <details>
+        <summary>Legend &amp; Guide</summary>
+        <div class="legend-body">
+          <div class="legend-section">
+            <h4>Node Types</h4>
+            <div class="legend-row">
+              <div class="swatch" style="background:#dbeafe;border-color:#3b82f6;"></div>
+              <span><strong>Claim</strong> — a main assertion about the bug or its cause</span>
+            </div>
+            <div class="legend-row">
+              <div class="swatch" style="background:#dcfce7;border-color:#22c55e;"></div>
+              <span><strong>Evidence</strong> — test output or code observations that support or refute a claim</span>
+            </div>
+            <div class="legend-row">
+              <div class="swatch diamond" style="background:#fef9c3;border-color:#eab308;"></div>
+              <span><strong>Assumption</strong> — an underlying principle or requirement taken for granted</span>
+            </div>
+          </div>
+          <div class="legend-section">
+            <h4>Edge Types</h4>
+            <div class="legend-row">
+              <div class="edge-line" style="background:#22c55e;"></div>
+              <span><strong>supports</strong> — evidence backs up the claim</span>
+            </div>
+            <div class="legend-row">
+              <div class="edge-line dashed"></div>
+              <span><strong>contradicts</strong> — evidence conflicts with the claim</span>
+            </div>
+            <div class="legend-row">
+              <div class="edge-line dotted"></div>
+              <span><strong>depends-on</strong> — one node logically requires another</span>
+            </div>
+            <div class="legend-row">
+              <div class="edge-line" style="background:#8b5cf6;"></div>
+              <span><strong>implies</strong> — one statement leads to another</span>
+            </div>
+          </div>
+          <div class="legend-section">
+            <h4>Interaction</h4>
+            <div style="line-height:1.7">
+              Click a node to highlight its direct neighbors.<br>
+              Click the background to reset.<br>
+              Scroll to zoom · drag to pan.
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
     <div class="right">
       <div id="cy"></div>
@@ -32,15 +103,62 @@
   </div>
 
   <script>
-    async function main() {
-      const res = await fetch("./cyto.json");
+    let cy = null;
+    let currentSources = {};
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    // Parse "filename:L12-L18" or "filename:L5" → {file, start, end} or null
+    function parseSourceRef(src) {
+      if (!src) return null;
+      const m = src.match(/^(.+?):L(\d+)(?:-L?(\d+))?$/i);
+      if (!m) return null;
+      return { file: m[1].trim(), start: parseInt(m[2]), end: m[3] ? parseInt(m[3]) : parseInt(m[2]) };
+    }
+
+    // Look up file content by basename match
+    function findSource(name) {
+      if (!name) return null;
+      const base = name.split("/").pop();
+      for (const [k, v] of Object.entries(currentSources)) {
+        if (k === name || k.split("/").pop() === base || k.endsWith("/" + base)) return v;
+      }
+      return null;
+    }
+
+    function buildSnippet(sourceRef) {
+      const ref = parseSourceRef(sourceRef);
+      if (!ref) return "";
+      const content = findSource(ref.file);
+      if (!content) return "";
+      const lines = content.split("\n");
+      const ctx = 2;  // extra context lines
+      const s = Math.max(0, ref.start - 1 - ctx);
+      const e = Math.min(lines.length, ref.end + ctx);
+      const snippet = lines.slice(s, e).map((line, i) => {
+        const lineNo = s + i + 1;
+        const hl = (lineNo >= ref.start && lineNo <= ref.end) ? ' class="hl"' : '';
+        return `<span${hl}>${String(lineNo).padStart(4," ")}  ${escapeHtml(line)}</span>`;
+      }).join("\n");
+      return `<details class="snippet-wrap">
+        <summary>${escapeHtml(ref.file)} : L${ref.start}${ref.end !== ref.start ? "–" + ref.end : ""}</summary>
+        <pre><code>${snippet}</code></pre>
+      </details>`;
+    }
+
+    async function loadGraph(jsonPath) {
+      const res = await fetch(jsonPath);
       const data = await res.json();
 
-      // Show text
+      currentSources = data.sources ?? {};
       document.getElementById("explain").textContent = data.text ?? "(no text)";
+      document.getElementById("nodeDetail").textContent = "";
 
-      // Build Cytoscape
-      const cy = cytoscape({
+      if (cy) cy.destroy();
+
+      cy = cytoscape({
         container: document.getElementById("cy"),
         elements: data.elements,
         style: [
@@ -48,41 +166,80 @@
             selector: "node",
             style: {
               "label": "data(label)",
+              "text-valign": "center",
+              "text-halign": "center",
               "text-wrap": "wrap",
-              "text-max-width": 220,
-              "font-size": 10,
-              "padding": 8,
+              "text-max-width": 160,
+              "font-size": 11,
+              "padding": 14,
+              "width": "label",
+              "height": "label",
               "shape": "round-rectangle",
-              "border-width": 1
+              "border-width": 2,
+              "border-color": "#999",
+              "background-color": "#f0f0f0",
+              "color": "#111"
             }
           },
-          { selector: 'node[type="Claim"]', style: { "border-width": 2 } },
-          { selector: 'node[type="Evidence"]', style: { "shape": "round-rectangle" } },
-          { selector: 'node[type="Assumption"]', style: { "shape": "diamond" } },
+          {
+            selector: 'node[type="Claim"]',
+            style: {
+              "background-color": "#dbeafe",
+              "border-color": "#3b82f6",
+              "border-width": 3,
+              "font-weight": "bold"
+            }
+          },
+          {
+            selector: 'node[type="Evidence"]',
+            style: {
+              "background-color": "#dcfce7",
+              "border-color": "#22c55e"
+            }
+          },
+          {
+            selector: 'node[type="Assumption"]',
+            style: {
+              "background-color": "#fef9c3",
+              "border-color": "#eab308",
+              "shape": "diamond"
+            }
+          },
 
           {
             selector: "edge",
             style: {
               "curve-style": "bezier",
               "target-arrow-shape": "triangle",
-              "arrow-scale": 0.9,
+              "arrow-scale": 1,
               "label": "data(type)",
-              "font-size": 9,
+              "font-size": 10,
               "text-rotation": "autorotate",
-              "text-margin-y": -8,
-              "width": 2
+              "text-margin-y": -10,
+              "text-background-color": "#fff",
+              "text-background-opacity": 0.85,
+              "text-background-padding": "3px",
+              "width": 2,
+              "line-color": "#aaa",
+              "target-arrow-color": "#aaa"
             }
           },
+          { selector: 'edge[type="supports"]',    style: { "line-style": "solid",  "line-color": "#22c55e", "target-arrow-color": "#22c55e" } },
+          { selector: 'edge[type="contradicts"]', style: { "line-style": "dashed", "line-color": "#ef4444", "target-arrow-color": "#ef4444" } },
+          { selector: 'edge[type="depends-on"]',  style: { "line-style": "dotted", "line-color": "#f97316", "target-arrow-color": "#f97316" } },
+          { selector: 'edge[type="implies"]',     style: { "line-style": "solid",  "line-color": "#8b5cf6", "target-arrow-color": "#8b5cf6" } },
 
-          { selector: 'edge[type="supports"]', style: { "line-style": "solid" } },
-          { selector: 'edge[type="contradicts"]', style: { "line-style": "dashed" } },
-          { selector: 'edge[type="depends-on"]', style: { "line-style": "dotted" } },
-          { selector: 'edge[type="implies"]', style: { "line-style": "solid" } },
-
-          { selector: ".highlight", style: { "border-width": 4 } },
-          { selector: ".dim", style: { "opacity": 0.2 } },
+          { selector: ".highlight", style: { "border-width": 5, "border-color": "#f59e0b" } },
+          { selector: ".dim", style: { "opacity": 0.15 } },
         ],
-        layout: { name: "cose", animate: false }
+        layout: {
+          name: "breadthfirst",
+          directed: true,
+          spacingFactor: 1.75,
+          padding: 40,
+          nodeDimensionsIncludeLabels: true,
+          avoidOverlap: true
+        }
       });
 
       // Click node -> show details + highlight neighborhood
@@ -94,7 +251,8 @@
           `<div><b>Node:</b> <code>${d.id}</code></div>` +
           `<div><b>Type:</b> <code>${d.type ?? ""}</code></div>` +
           `<div><b>Source:</b> <code>${d.source ?? ""}</code></div>` +
-          `<div><b>Confidence:</b> <code>${d.confidence ?? ""}</code></div>`;
+          `<div><b>Confidence:</b> <code>${d.confidence ?? ""}</code></div>` +
+          buildSnippet(d.source);
 
         cy.elements().removeClass("highlight").addClass("dim");
         n.removeClass("dim").addClass("highlight");
@@ -110,8 +268,39 @@
       });
     }
 
+    async function main() {
+      const select = document.getElementById("bugSelect");
+
+      // Try to load manifest from pipeline output
+      let names = [];
+      try {
+        const m = await fetch("./output/manifest.json");
+        const manifest = await m.json();
+        names = Object.keys(manifest).filter(k => manifest[k].status === "ok");
+      } catch (_) {}
+
+      // Fallback to legacy cyto.json
+      if (names.length === 0) {
+        select.innerHTML = '<option value="./cyto.json">cyto.json</option>';
+        await loadGraph("./cyto.json");
+        return;
+      }
+
+      select.innerHTML = names
+        .map(n => `<option value="./output/${n}.json">${n}</option>`)
+        .join("");
+
+      await loadGraph(`./output/${names[0]}.json`);
+
+      select.addEventListener("change", () => {
+        loadGraph(select.value).catch(err => {
+          document.getElementById("explain").textContent = "Failed to load: " + err;
+        });
+      });
+    }
+
     main().catch(err => {
-      document.getElementById("explain").textContent = "Failed to load cyto.json: " + err;
+      document.getElementById("explain").textContent = "Error: " + err;
       console.error(err);
     });
   </script>

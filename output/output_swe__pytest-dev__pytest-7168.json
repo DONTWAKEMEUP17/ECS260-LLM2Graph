@@ -1,0 +1,90 @@
+{
+  "text": "The crash occurs when repr() for an object raises an exception, and Pytest's saferepr tries to format this exception using the object's __class__.__name__, which can itself raise if the object's __getattribute__ is broken. The fix is to use type(obj).__name__ instead, which avoids invoking __getattribute__ and prevents the recursive error. This change ensures safe representation of objects with broken attribute access during exception formatting.",
+  "sources": {
+    "test_pytest-dev__pytest-7168.txt": "[ISSUE / BUG REPORT]\nINTERNALERROR when exception in __repr__\nMinimal code to reproduce the issue: \n\n```python\n\nclass SomeClass:\n\n    def __getattribute__(self, attr):\n\n        raise\n\n    def __repr__(self):\n\n        raise\n\ndef test():\n\n    SomeClass().attr\n\n```\n\nSession traceback:\n\n```\n\n============================= test session starts ==============================\n\nplatform darwin -- Python 3.8.1, pytest-5.4.1, py-1.8.1, pluggy-0.13.1 -- /usr/local/opt/python@3.8/bin/python3.8\n\ncachedir: .pytest_cache\n\nrootdir: ******\n\nplugins: asyncio-0.10.0, mock-3.0.0, cov-2.8.1\n\ncollecting ... collected 1 item\n\n\n\ntest_pytest.py::test \n\nINTERNALERROR> Traceback (most recent call last):\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/main.py\", line 191, in wrap_session\n\nINTERNALERROR>     session.exitstatus = doit(config, session) or 0\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/main.py\", line 247, in _main\n\nINTERNALERROR>     config.hook.pytest_runtestloop(session=session)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/hooks.py\", line 286, in __call__\n\nINTERNALERROR>     return self._hookexec(self, self.get_hookimpls(), kwargs)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/manager.py\", line 93, in _hookexec\n\nINTERNALERROR>     return self._inner_hookexec(hook, methods, kwargs)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/manager.py\", line 84, in <lambda>\n\nINTERNALERROR>     self._inner_hookexec = lambda hook, methods, kwargs: hook.multicall(\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 208, in _multicall\n\nINTERNALERROR>     return outcome.get_result()\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 80, in get_result\n\nINTERNALERROR>     raise ex[1].with_traceback(ex[2])\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 187, in _multicall\n\nINTERNALERROR>     res = hook_impl.function(*args)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/main.py\", line 272, in pytest_runtestloop\n\nINTERNALERROR>     item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/hooks.py\", line 286, in __call__\n\nINTERNALERROR>     return self._hookexec(self, self.get_hookimpls(), kwargs)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/manager.py\", line 93, in _hookexec\n\nINTERNALERROR>     return self._inner_hookexec(hook, methods, kwargs)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/manager.py\", line 84, in <lambda>\n\nINTERNALERROR>     self._inner_hookexec = lambda hook, methods, kwargs: hook.multicall(\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 208, in _multicall\n\nINTERNALERROR>     return outcome.get_result()\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 80, in get_result\n\nINTERNALERROR>     raise ex[1].with_traceback(ex[2])\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 187, in _multicall\n\nINTERNALERROR>     res = hook_impl.function(*args)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/runner.py\", line 85, in pytest_runtest_protocol\n\nINTERNALERROR>     runtestprotocol(item, nextitem=nextitem)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/runner.py\", line 100, in runtestprotocol\n\nINTERNALERROR>     reports.append(call_and_report(item, \"call\", log))\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/runner.py\", line 188, in call_and_report\n\nINTERNALERROR>     report = hook.pytest_runtest_makereport(item=item, call=call)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/hooks.py\", line 286, in __call__\n\nINTERNALERROR>     return self._hookexec(self, self.get_hookimpls(), kwargs)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/manager.py\", line 93, in _hookexec\n\nINTERNALERROR>     return self._inner_hookexec(hook, methods, kwargs)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/manager.py\", line 84, in <lambda>\n\nINTERNALERROR>     self._inner_hookexec = lambda hook, methods, kwargs: hook.multicall(\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 203, in _multicall\n\nINTERNALERROR>     gen.send(outcome)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/skipping.py\", line 129, in pytest_runtest_makereport\n\nINTERNALERROR>     rep = outcome.get_result()\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 80, in get_result\n\nINTERNALERROR>     raise ex[1].with_traceback(ex[2])\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/pluggy/callers.py\", line 187, in _multicall\n\nINTERNALERROR>     res = hook_impl.function(*args)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/runner.py\", line 260, in pytest_runtest_makereport\n\nINTERNALERROR>     return TestReport.from_item_and_call(item, call)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/reports.py\", line 294, in from_item_and_call\n\nINTERNALERROR>     longrepr = item.repr_failure(excinfo)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/python.py\", line 1513, in repr_failure\n\nINTERNALERROR>     return self._repr_failure_py(excinfo, style=style)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/nodes.py\", line 355, in _repr_failure_py\n\nINTERNALERROR>     return excinfo.getrepr(\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_code/code.py\", line 634, in getrepr\n\nINTERNALERROR>     return fmt.repr_excinfo(self)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_code/code.py\", line 879, in repr_excinfo\n\nINTERNALERROR>     reprtraceback = self.repr_traceback(excinfo_)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_code/code.py\", line 823, in repr_traceback\n\nINTERNALERROR>     reprentry = self.repr_traceback_entry(entry, einfo)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_code/code.py\", line 784, in repr_traceback_entry\n\nINTERNALERROR>     reprargs = self.repr_args(entry) if not short else None\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_code/code.py\", line 693, in repr_args\n\nINTERNALERROR>     args.append((argname, saferepr(argvalue)))\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_io/saferepr.py\", line 82, in saferepr\n\nINTERNALERROR>     return SafeRepr(maxsize).repr(obj)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_io/saferepr.py\", line 51, in repr\n\nINTERNALERROR>     s = _format_repr_exception(exc, x)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_io/saferepr.py\", line 23, in _format_repr_exception\n\nINTERNALERROR>     exc_info, obj.__class__.__name__, id(obj)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_io/saferepr.py\", line 47, in repr\n\nINTERNALERROR>     s = super().repr(x)\n\nINTERNALERROR>   File \"/usr/local/Cellar/python@3.8/3.8.1/Frameworks/Python.framework/Versions/3.8/lib/python3.8/reprlib.py\", line 52, in repr\n\nINTERNALERROR>     return self.repr1(x, self.maxlevel)\n\nINTERNALERROR>   File \"/usr/local/Cellar/python@3.8/3.8.1/Frameworks/Python.framework/Versions/3.8/lib/python3.8/reprlib.py\", line 62, in repr1\n\nINTERNALERROR>     return self.repr_instance(x, level)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_io/saferepr.py\", line 60, in repr_instance\n\nINTERNALERROR>     s = _format_repr_exception(exc, x)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_io/saferepr.py\", line 23, in _format_repr_exception\n\nINTERNALERROR>     exc_info, obj.__class__.__name__, id(obj)\n\nINTERNALERROR>   File \"/usr/local/lib/python3.8/site-packages/_pytest/_io/saferepr.py\", line 56, in repr_instance\n\nINTERNALERROR>     s = repr(x)\n\nINTERNALERROR>   File \"/Users/stiflou/Documents/projets/apischema/tests/test_pytest.py\", line 6, in __repr__\n\nINTERNALERROR>     raise\n\nINTERNALERROR> RuntimeError: No active exception to reraise\n\n\n\n============================ no tests ran in 0.09s ============================\n\n```\n\n[FAILING TESTS]\n  FAIL  [\"testing/io/test_saferepr.py::test_simple_repr\", \"testing/io/test_saferepr.py::test_maxsize\", \"testing/io/test_saferepr.py::test_maxsize_error_on_instance\", \"testing/io/test_saferepr.py::test_exceptions\", \"testing/io/test_saferepr.py::test_baseexception\", \"testing/io/test_saferepr.py::test_buggy_builtin_repr\", \"testing/io/test_saferepr.py::test_big_repr\", \"testing/io/test_saferepr.py::test_repr_on_newstyle\", \"testing/io/test_saferepr.py::test_unicode\", \"testing/io/test_saferepr.py::test_pformat_dispatch\", \"testing/io/test_saferepr.py::test_broken_getattribute\"]\n\n[PASSING TESTS (sample)]\n  PASS  []\n\n[PATCH DIFF]\ndiff --git a/src/_pytest/_io/saferepr.py b/src/_pytest/_io/saferepr.py\n--- a/src/_pytest/_io/saferepr.py\n+++ b/src/_pytest/_io/saferepr.py\n@@ -20,7 +20,7 @@ def _format_repr_exception(exc: BaseException, obj: Any) -> str:\n     except BaseException as exc:\n         exc_info = \"unpresentable exception ({})\".format(_try_repr_or_str(exc))\n     return \"<[{} raised in repr()] {} object at 0x{:x}>\".format(\n-        exc_info, obj.__class__.__name__, id(obj)\n+        exc_info, type(obj).__name__, id(obj)\n     )\n \n \n",
+    "saferepr.py": "import pprint\nimport reprlib\nfrom typing import Any\n\n\ndef _try_repr_or_str(obj):\n    try:\n        return repr(obj)\n    except (KeyboardInterrupt, SystemExit):\n        raise\n    except BaseException:\n        return '{}(\"{}\")'.format(type(obj).__name__, obj)\n\n\ndef _format_repr_exception(exc: BaseException, obj: Any) -> str:\n    try:\n        exc_info = _try_repr_or_str(exc)\n    except (KeyboardInterrupt, SystemExit):\n        raise\n    except BaseException as exc:\n        exc_info = \"unpresentable exception ({})\".format(_try_repr_or_str(exc))\n    return \"<[{} raised in repr()] {} object at 0x{:x}>\".format(\n        exc_info, obj.__class__.__name__, id(obj)\n    )\n\n\ndef _ellipsize(s: str, maxsize: int) -> str:\n    if len(s) > maxsize:\n        i = max(0, (maxsize - 3) // 2)\n        j = max(0, maxsize - 3 - i)\n        return s[:i] + \"...\" + s[len(s) - j :]\n    return s\n\n\nclass SafeRepr(reprlib.Repr):\n    \"\"\"subclass of repr.Repr that limits the resulting size of repr()\n    and includes information on exceptions raised during the call.\n    \"\"\"\n\n    def __init__(self, maxsize: int) -> None:\n        super().__init__()\n        self.maxstring = maxsize\n        self.maxsize = maxsize\n\n    def repr(self, x: Any) -> str:\n        try:\n            s = super().repr(x)\n        except (KeyboardInterrupt, SystemExit):\n            raise\n        except BaseException as exc:\n            s = _format_repr_exception(exc, x)\n        return _ellipsize(s, self.maxsize)\n\n    def repr_instance(self, x: Any, level: int) -> str:\n        try:\n            s = repr(x)\n        except (KeyboardInterrupt, SystemExit):\n            raise\n        except BaseException as exc:\n            s = _format_repr_exception(exc, x)\n        return _ellipsize(s, self.maxsize)\n\n\ndef safeformat(obj: Any) -> str:\n    \"\"\"return a pretty printed string for the given object.\n    Failing __repr__ functions of user instances will be represented\n    with a short exception info.\n    \"\"\"\n    try:\n        return pprint.pformat(obj)\n    except Exception as exc:\n        return _format_repr_exception(exc, obj)\n\n\ndef saferepr(obj: Any, maxsize: int = 240) -> str:\n    \"\"\"return a size-limited safe repr-string for the given object.\n    Failing __repr__ functions of user instances will be represented\n    with a short exception info and 'saferepr' generally takes\n    care to never raise exceptions itself.  This function is a wrapper\n    around the Repr/reprlib functionality of the standard 2.6 lib.\n    \"\"\"\n    return SafeRepr(maxsize).repr(obj)\n\n\nclass AlwaysDispatchingPrettyPrinter(pprint.PrettyPrinter):\n    \"\"\"PrettyPrinter that always dispatches (regardless of width).\"\"\"\n\n    def _format(self, object, stream, indent, allowance, context, level):\n        p = self._dispatch.get(type(object).__repr__, None)\n\n        objid = id(object)\n        if objid in context or p is None:\n            return super()._format(object, stream, indent, allowance, context, level)\n\n        context[objid] = 1\n        p(self, object, stream, indent, allowance, context, level + 1)\n        del context[objid]\n\n\ndef _pformat_dispatch(object, indent=1, width=80, depth=None, *, compact=False):\n    return AlwaysDispatchingPrettyPrinter(\n        indent=indent, width=width, depth=depth, compact=compact\n    ).pformat(object)\n"
+  },
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "repr(obj) can raise exceptions including in __repr__ implementations",
+          "type": "Claim",
+          "source": "src/_pytest/_io/saferepr.py:L11-L15,33-39,50-65.",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "Pytest saferepr uses obj.__class__.__name__ which may raise if __getattribute__ is broken",
+          "type": "Claim",
+          "source": "src/_pytest/_io/saferepr.py:L20-L24,23.",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c3",
+          "label": "Using type(obj).__name__ avoids calling __getattribute__ on obj",
+          "type": "Claim",
+          "source": "src/_pytest/_io/saferepr.py:L23,24, fixed line 24 change.",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "c4",
+          "label": "Changing obj.__class__.__name__ to type(obj).__name__ fixes the internalerror during saferepr exception formatting",
+          "type": "Claim",
+          "source": "src/_pytest/_io/saferepr.py:L20-L24 (patch diff).",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Test output shows RuntimeError from a rebroadcast raise and recursive calls to saferepr for repr on bad object",
+          "type": "Evidence",
+          "source": "test_pytest-dev__pytest-7168.txt:L20-L105",
+          "confidence": 1.0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "implies:c1->c2",
+          "source": "c1",
+          "target": "c2",
+          "type": "implies"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:c2->c4",
+          "source": "c2",
+          "target": "c4",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:c3->c4",
+          "source": "c3",
+          "target": "c4",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:e1->c4",
+          "source": "e1",
+          "target": "c4",
+          "type": "supports"
+        }
+      }
+    ]
+  }
+}

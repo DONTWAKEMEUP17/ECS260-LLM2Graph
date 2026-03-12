@@ -9,7 +9,7 @@ import os
 import sys
 from pathlib import Path
 
-client = OpenAI()
+client = OpenAI(timeout=60.0, max_retries=2)
 
 
 # ---------- Schema (Strongly constrained) ----------
@@ -99,7 +99,11 @@ def extract_graph(user_text: str) -> Output:
                     "Node types: Claim, Evidence, Assumption.\n"
                     "Edge types: supports, contradicts, depends-on, implies.\n"
                     "Use short ids: c1,c2 for claims; e1,e2 for evidence; a1,a2 for assumptions.\n"
-                    "Only create edges that are justified by the input."
+                    "Only create edges that are justified by the input.\n"
+                    "In the `source` field, always reference the exact file and line range using the format "
+                    "`filename:L<start>-L<end>` (e.g. `bucketsort.py:L12-L18`) or `filename:L<line>` for a single line. "
+                    "For test output references use the test filename with the same format (e.g. `test_bucketsort.txt:L3-L7`). "
+                    "Use the shortest unambiguous filename (basename only, not full path)."
                 ),
             },
             {"role": "user", "content": user_text},
