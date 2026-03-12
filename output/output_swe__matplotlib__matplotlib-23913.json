@@ -1,5 +1,5 @@
 {
-  "text": "The legend.py module added a new keyword parameter \"draggable\" (defaulting to False) to the Legend class __init__ function, allowing users to make the legend draggable at creation time. Previously, dragging had to be enabled by calling a method after creating the legend object. This change wraps the legend with DraggableLegend if draggable=True, simplifying usage.",
+  "text": "The Legend class in matplotlib is responsible for creating legends on plots. While legends can be made draggable after creation using separate calls, the current implementation does not support a 'draggable' keyword argument in the Legend constructor for enabling dragging at creation time. The proposed patch adds a 'draggable' boolean parameter to the Legend constructor, defaulting to False, allowing to set the legend to be draggable at initialization. This is done by calling set_draggable(state=draggable) during initialization, thus supporting the feature request to create draggable legends directly via a keyword.",
   "sources": {
     "test_matplotlib__matplotlib-23913.txt": "[ISSUE / BUG REPORT]\nlegend draggable as keyword\n<!--To help us understand and resolve your issue, please fill out the form to the best of your ability.-->\n\n<!--You can feel free to delete the sections that do not apply.-->\n\n\n\n### Feature request\n\n\n\n**There is not keyword to make legend draggable at creation**\n\n\n\n<!--A short 1-2 sentences that succinctly describes the bug-->\n\n\n\nIs there a code reason why one can not add a \"draggable=True\" keyword to the __init__ function for Legend?  This would be more handy than having to call it after legend creation.  And, naively, it would seem simple to do.  But maybe there is a reason why it would not work?\n\n[FAILING TESTS]\n  FAIL  [\"lib/matplotlib/tests/test_legend.py::test_legend_draggable[True]\", \"lib/matplotlib/tests/test_legend.py::test_legend_draggable[False]\"]\n\n[PASSING TESTS (sample)]\n  PASS  [\"lib/matplotlib/tests/test_legend.py::test_legend_ordereddict\", \"lib/matplotlib/tests/test_legend.py::test_legend_auto1[png]\", \"lib/matplotlib/tests/test_legend.py::test_legend_auto1[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_legend_auto2[png]\", \"lib/matplotlib/tests/test_legend.py::test_legend_auto2[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_legend_auto3[png]\", \"lib/matplotlib/tests/test_legend.py::test_legend_auto3[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_various_labels[png]\", \"lib/matplotlib/tests/test_legend.py::test_various_labels[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_legend_label_with_leading_underscore\", \"lib/matplotlib/tests/test_legend.py::test_labels_first[png]\", \"lib/matplotlib/tests/test_legend.py::test_multiple_keys[png]\", \"lib/matplotlib/tests/test_legend.py::test_alpha_rgba[png]\", \"lib/matplotlib/tests/test_legend.py::test_alpha_rcparam[png]\", \"lib/matplotlib/tests/test_legend.py::test_fancy[png]\", \"lib/matplotlib/tests/test_legend.py::test_fancy[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_framealpha[png]\", \"lib/matplotlib/tests/test_legend.py::test_framealpha[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_rc[png]\", \"lib/matplotlib/tests/test_legend.py::test_rc[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_legend_expand[png]\", \"lib/matplotlib/tests/test_legend.py::test_legend_expand[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_hatching[png]\", \"lib/matplotlib/tests/test_legend.py::test_hatching[pdf]\", \"lib/matplotlib/tests/test_legend.py::test_legend_remove\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_no_args\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_positional_handles_labels\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_positional_handles_only\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_positional_labels_only\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_three_args\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_handler_map\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_kwargs_handles_only\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_kwargs_labels_only\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_legend_kwargs_handles_labels\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_warn_mixed_args_and_kwargs\", \"lib/matplotlib/tests/test_legend.py::TestLegendFunction::test_parasite\", \"lib/matplotlib/tests/test_legend.py::TestLegendFigureFunction::test_legend_handle_label\", \"lib/matplotlib/tests/test_legend.py::TestLegendFigureFunction::test_legend_no_args\", \"lib/matplotlib/tests/test_legend.py::TestLegendFigureFunction::test_legend_label_arg\", \"lib/matplotlib/tests/test_legend.py::TestLegendFigureFunction::test_legend_label_three_args\", \"lib/matplotlib/tests/test_legend.py::TestLegendFigureFunction::test_legend_label_three_args_pluskw\", \"lib/matplotlib/tests/test_legend.py::TestLegendFigureFunction::test_legend_kw_args\", \"lib/matplotlib/tests/test_legend.py::TestLegendFigureFunction::test_warn_args_kwargs\", \"lib/matplotlib/tests/test_legend.py::test_legend_stackplot[png]\", \"lib/matplotlib/tests/test_legend.py::test_cross_figure_patch_legend\", \"lib/matplotlib/tests/test_legend.py::test_nanscatter\", \"lib/matplotlib/tests/test_legend.py::test_legend_repeatcheckok\", \"lib/matplotlib/tests/test_legend.py::test_not_covering_scatter[png]\", \"lib/matplotlib/tests/test_legend.py::test_not_covering_scatter_transform[png]\", \"lib/matplotlib/tests/test_legend.py::test_linecollection_scaled_dashes\", \"lib/matplotlib/tests/test_legend.py::test_handler_numpoints\", \"lib/matplotlib/tests/test_legend.py::test_text_nohandler_warning\", \"lib/matplotlib/tests/test_legend.py::test_empty_bar_chart_with_legend\", \"lib/matplotlib/tests/test_legend.py::test_shadow_framealpha\", \"lib/matplotlib/tests/test_legend.py::test_legend_title_empty\", \"lib/matplotlib/tests/test_legend.py::test_legend_proper_window_extent\", \"lib/matplotlib/tests/test_legend.py::test_window_extent_cached_renderer\", \"lib/matplotlib/tests/test_legend.py::test_legend_title_fontprop_fontsize\", \"lib/matplotlib/tests/test_legend.py::test_legend_alignment[center]\", \"lib/matplotlib/tests/test_legend.py::test_legend_alignment[left]\", \"lib/matplotlib/tests/test_legend.py::test_legend_alignment[right]\", \"lib/matplotlib/tests/test_legend.py::test_legend_set_alignment[center]\", \"lib/matplotlib/tests/test_legend.py::test_legend_set_alignment[left]\", \"lib/matplotlib/tests/test_legend.py::test_legend_set_alignment[right]\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_single[red]\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_single[none]\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_single[color2]\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_list\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_linecolor\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_markeredgecolor\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_markerfacecolor\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_rcparam_single[red]\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_rcparam_single[none]\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_rcparam_single[color2]\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_rcparam_linecolor\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_rcparam_markeredgecolor\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_rcparam_markeredgecolor_short\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_rcparam_markerfacecolor\", \"lib/matplotlib/tests/test_legend.py::test_legend_labelcolor_rcparam_markerfacecolor_short\", \"lib/matplotlib/tests/test_legend.py::test_get_set_draggable\", \"lib/matplotlib/tests/test_legend.py::test_alpha_handles\", \"lib/matplotlib/tests/test_legend.py::test_warn_big_data_best_loc\", \"lib/matplotlib/tests/test_legend.py::test_no_warn_big_data_when_loc_specified\", \"lib/matplotlib/tests/test_legend.py::test_plot_multiple_input_multiple_label[label_array0]\", \"lib/matplotlib/tests/test_legend.py::test_plot_multiple_input_multiple_label[label_array1]\", \"lib/matplotlib/tests/test_legend.py::test_plot_multiple_input_multiple_label[label_array2]\", \"lib/matplotlib/tests/test_legend.py::test_plot_multiple_input_single_label[one]\", \"lib/matplotlib/tests/test_legend.py::test_plot_multiple_input_single_label[1]\", \"lib/matplotlib/tests/test_legend.py::test_plot_multiple_input_single_label[int]\", \"lib/matplotlib/tests/test_legend.py::test_plot_single_input_multiple_label[label_array0]\", \"lib/matplotlib/tests/test_legend.py::test_plot_single_input_multiple_label[label_array1]\", \"lib/matplotlib/tests/test_legend.py::test_plot_single_input_multiple_label[label_array2]\", \"lib/matplotlib/tests/test_legend.py::test_plot_multiple_label_incorrect_length_exception\", \"lib/matplotlib/tests/test_legend.py::test_legend_face_edgecolor\", \"lib/matplotlib/tests/test_legend.py::test_legend_text_axes\", \"lib/matplotlib/tests/test_legend.py::test_handlerline2d\", \"lib/matplotlib/tests/test_legend.py::test_subfigure_legend\", \"lib/matplotlib/tests/test_legend.py::test_setting_alpha_keeps_polycollection_color\", \"lib/matplotlib/tests/test_legend.py::test_legend_markers_from_line2d\", \"lib/matplotlib/tests/test_legend.py::test_ncol_ncols[png]\", \"lib/matplotlib/tests/test_legend.py::test_ncol_ncols[pdf]\"]\n\n[PATCH DIFF]\ndiff --git a/lib/matplotlib/legend.py b/lib/matplotlib/legend.py\n--- a/lib/matplotlib/legend.py\n+++ b/lib/matplotlib/legend.py\n@@ -286,6 +286,9 @@ def _update_bbox_to_anchor(self, loc_in_canvas):\n     The custom dictionary mapping instances or types to a legend\n     handler. This *handler_map* updates the default handler map\n     found at `matplotlib.legend.Legend.get_legend_handler_map`.\n+\n+draggable : bool, default: False\n+    Whether the legend can be dragged with the mouse.\n \"\"\")\n \n \n@@ -342,7 +345,8 @@ def __init__(\n         title_fontproperties=None,  # properties for the legend title\n         alignment=\"center\",       # control the alignment within the legend box\n         *,\n-        ncol=1  # synonym for ncols (backward compatibility)\n+        ncol=1,  # synonym for ncols (backward compatibility)\n+        draggable=False  # whether the legend can be dragged with the mouse\n     ):\n         \"\"\"\n         Parameters\n@@ -537,7 +541,9 @@ def val_or_rc(val, rc_name):\n             title_prop_fp.set_size(title_fontsize)\n \n         self.set_title(title, prop=title_prop_fp)\n+\n         self._draggable = None\n+        self.set_draggable(state=draggable)\n \n         # set the text color\n \n",
     "legend.py": "\"\"\"\nThe legend module defines the Legend class, which is responsible for\ndrawing legends associated with axes and/or figures.\n\n.. important::\n\n    It is unlikely that you would ever create a Legend instance manually.\n    Most users would normally create a legend via the `~.Axes.legend`\n    function. For more details on legends there is also a :doc:`legend guide\n    </tutorials/intermediate/legend_guide>`.\n\nThe `Legend` class is a container of legend handles and legend texts.\n\nThe legend handler map specifies how to create legend handles from artists\n(lines, patches, etc.) in the axes or figures. Default legend handlers are\ndefined in the :mod:`~matplotlib.legend_handler` module. While not all artist\ntypes are covered by the default legend handlers, custom legend handlers can be\ndefined to support arbitrary objects.\n\nSee the :doc:`legend guide </tutorials/intermediate/legend_guide>` for more\ninformation.\n\"\"\"\n\nimport itertools\nimport logging\nimport time\n\nimport numpy as np\n\nimport matplotlib as mpl\nfrom matplotlib import _api, _docstring, colors, offsetbox\nfrom matplotlib.artist import Artist, allow_rasterization\nfrom matplotlib.cbook import silent_list\nfrom matplotlib.font_manager import FontProperties\nfrom matplotlib.lines import Line2D\nfrom matplotlib.patches import (Patch, Rectangle, Shadow, FancyBboxPatch,\n                                StepPatch)\nfrom matplotlib.collections import (\n    Collection, CircleCollection, LineCollection, PathCollection,\n    PolyCollection, RegularPolyCollection)\nfrom matplotlib.text import Text\nfrom matplotlib.transforms import Bbox, BboxBase, TransformedBbox\nfrom matplotlib.transforms import BboxTransformTo, BboxTransformFrom\nfrom matplotlib.offsetbox import (\n    AnchoredOffsetbox, DraggableOffsetBox,\n    HPacker, VPacker,\n    DrawingArea, TextArea,\n)\nfrom matplotlib.container import ErrorbarContainer, BarContainer, StemContainer\nfrom . import legend_handler\n\n\nclass DraggableLegend(DraggableOffsetBox):\n    def __init__(self, legend, use_blit=False, update=\"loc\"):\n        \"\"\"\n        Wrapper around a `.Legend` to support mouse dragging.\n\n        Parameters\n        ----------\n        legend : `.Legend`\n            The `.Legend` instance to wrap.\n        use_blit : bool, optional\n            Use blitting for faster image composition. For details see\n            :ref:`func-animation`.\n        update : {'loc', 'bbox'}, optional\n            If \"loc\", update the *loc* parameter of the legend upon finalizing.\n            If \"bbox\", update the *bbox_to_anchor* parameter.\n        \"\"\"\n        self.legend = legend\n\n        _api.check_in_list([\"loc\", \"bbox\"], update=update)\n        self._update = update\n\n        super().__init__(legend, legend._legend_box, use_blit=use_blit)\n\n    def finalize_offset(self):\n        if self._update == \"loc\":\n            self._update_loc(self.get_loc_in_canvas())\n        elif self._update == \"bbox\":\n            self._bbox_to_anchor(self.get_loc_in_canvas())\n\n    def _update_loc(self, loc_in_canvas):\n        bbox = self.legend.get_bbox_to_anchor()\n        # if bbox has zero width or height, the transformation is\n        # ill-defined. Fall back to the default bbox_to_anchor.\n        if bbox.width == 0 or bbox.height == 0:\n            self.legend.set_bbox_to_anchor(None)\n            bbox = self.legend.get_bbox_to_anchor()\n        _bbox_transform = BboxTransformFrom(bbox)\n        self.legend._loc = tuple(_bbox_transform.transform(loc_in_canvas))\n\n    def _update_bbox_to_anchor(self, loc_in_canvas):\n        loc_in_bbox = self.legend.axes.transAxes.transform(loc_in_canvas)\n        self.legend.set_bbox_to_anchor(loc_in_bbox)\n\n\n_docstring.interpd.update(_legend_kw_doc=\"\"\"\nloc : str or pair of floats, default: :rc:`legend.loc` ('best' for axes, \\\n'upper right' for figures)\n    The location of the legend.\n\n    The strings\n    ``'upper left', 'upper right', 'lower left', 'lower right'``\n    place the legend at the corresponding corner of the axes/figure.\n\n    The strings\n    ``'upper center', 'lower center', 'center left', 'center right'``\n    place the legend at the center of the corresponding edge of the\n    axes/figure.\n\n    The string ``'center'`` places the legend at the center of the axes/figure.\n\n    The string ``'best'`` places the legend at the location, among the nine\n    locations defined so far, with the minimum overlap with other drawn\n    artists.  This option can be quite slow for plots with large amounts of\n    data; your plotting speed may benefit from providing a specific location.\n\n    The location can also be a 2-tuple giving the coordinates of the lower-left\n    corner of the legend in axes coordinates (in which case *bbox_to_anchor*\n    will be ignored).\n\n    For back-compatibility, ``'center right'`` (but no other location) can also\n    be spelled ``'right'``, and each \"string\" locations can also be given as a\n    numeric value:\n\n        ===============   =============\n        Location String   Location Code\n        ===============   =============\n        'best'            0\n        'upper right'     1\n        'upper left'      2\n        'lower left'      3\n        'lower right'     4\n        'right'           5\n        'center left'     6\n        'center right'    7\n        'lower center'    8\n        'upper center'    9\n        'center'          10\n        ===============   =============\n\nbbox_to_anchor : `.BboxBase`, 2-tuple, or 4-tuple of floats\n    Box that is used to position the legend in conjunction with *loc*.\n    Defaults to `axes.bbox` (if called as a method to `.Axes.legend`) or\n    `figure.bbox` (if `.Figure.legend`).  This argument allows arbitrary\n    placement of the legend.\n\n    Bbox coordinates are interpreted in the coordinate system given by\n    *bbox_transform*, with the default transform\n    Axes or Figure coordinates, depending on which ``legend`` is called.\n\n    If a 4-tuple or `.BboxBase` is given, then it specifies the bbox\n    ``(x, y, width, height)`` that the legend is placed in.\n    To put the\n... [truncated at 6000 chars]"
@@ -9,46 +9,80 @@
       {
         "data": {
           "id": "c1",
-          "label": "Legend class __init__ supports draggable keyword to enable dragging on creation",
+          "label": "Legend is usually created via Axes.legend, not directly.",
           "type": "Claim",
-          "source": "lib/matplotlib/legend.py:L340-L357,L534-L544",
-          "confidence": 0.95
-        }
-      },
-      {
-        "data": {
-          "id": "c2",
-          "label": "Previously, legend dragging had to be enabled after creation, not during __init__",
-          "type": "Claim",
-          "source": "test_matplotlib__matplotlib-23913.txt:L10-L16",
+          "source": "legend.py:L1-L25",
           "confidence": 0.9
         }
       },
       {
         "data": {
-          "id": "a1",
-          "label": "Adding draggable keyword improves usability by making dragging more convenient",
-          "type": "Assumption",
-          "source": "test_matplotlib__matplotlib-23913.txt:L12-L16",
-          "confidence": 0.8
+          "id": "c2",
+          "label": "Currently no 'draggable' keyword to enable draggable Legend at creation.",
+          "type": "Claim",
+          "source": "test_matplotlib__matplotlib-23913.txt:L1-L30",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "c3",
+          "label": "'DraggableLegend' class exists to support dragging legends by wrapping a Legend instance.",
+          "type": "Claim",
+          "source": "legend.py:L80-L110",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c4",
+          "label": "Patch adds 'draggable' parameter to Legend constructor, default False.",
+          "type": "Claim",
+          "source": "legend.py:L340-L350",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "c5",
+          "label": "Patch calls set_draggable(state=draggable) in __init__ to enable dragging based on the keyword.",
+          "type": "Claim",
+          "source": "legend.py:L530-L550",
+          "confidence": 0.95
         }
       }
     ],
     "edges": [
       {
         "data": {
-          "id": "contradicts:c1->c2",
-          "source": "c1",
+          "id": "supports:c4->c2",
+          "source": "c4",
           "target": "c2",
-          "type": "contradicts"
+          "type": "supports"
         }
       },
       {
         "data": {
-          "id": "supports:a1->c1",
-          "source": "a1",
-          "target": "c1",
+          "id": "depends-on:c5->c4",
+          "source": "c5",
+          "target": "c4",
+          "type": "depends-on"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:c3->c2",
+          "source": "c3",
+          "target": "c2",
           "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "implies:c1->c2",
+          "source": "c1",
+          "target": "c2",
+          "type": "implies"
         }
       }
     ]

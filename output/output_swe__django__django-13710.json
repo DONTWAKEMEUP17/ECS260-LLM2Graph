@@ -1,5 +1,5 @@
 {
-  "text": "In Django admin, specifying verbose_name for an Inline did not automatically define verbose_name_plural, which defaulted to the model's Meta verbose_name_plural. The patch changes this behavior: if verbose_name_plural is not set, it derives by default from verbose_name (adding an 's'), aligning Inline behavior with Django model Meta classes and improving consistency and usability.",
+  "text": "The patch changes the Inline admin class initialization so that if verbose_name_plural is not explicitly set, it defaults to the pluralization of verbose_name if verbose_name is provided; otherwise, it falls back to the model's verbose_name_plural. This aligns Inline verbose_name_plural behavior with the Django model Meta class pluralization and addresses the confusion of requiring both to be specified separately.",
   "sources": {
     "test_django__django-13710.txt": "[ISSUE / BUG REPORT]\nUse Admin Inline verbose_name as default for Inline verbose_name_plural\nDescription\n\t\nDjango allows specification of a verbose_name and a verbose_name_plural for Inline classes in admin views. However, verbose_name_plural for an Inline is not currently based on a specified verbose_name. Instead, it continues to be based on the model name, or an a verbose_name specified in the model's Meta class. This was confusing to me initially (I didn't understand why I had to specify both name forms for an Inline if I wanted to overrule the default name), and seems inconsistent with the approach for a model's Meta class (which does automatically base the plural form on a specified verbose_name). I propose that verbose_name_plural for an Inline class should by default be based on the verbose_name for an Inline if that is specified.\nI have written a patch to implement this, including tests. Would be happy to submit that.\n\n[FAILING TESTS]\n  FAIL  [\"test_verbose_name_inline (admin_inlines.tests.TestVerboseNameInlineForms)\"]\n\n[PASSING TESTS (sample)]\n  PASS  [\"Regression for #9362\", \"test_deleting_inline_with_protected_delete_does_not_validate (admin_inlines.tests.TestInlineProtectedOnDelete)\", \"test_all_inline_media (admin_inlines.tests.TestInlineMedia)\", \"test_inline_media_only_base (admin_inlines.tests.TestInlineMedia)\", \"test_inline_media_only_inline (admin_inlines.tests.TestInlineMedia)\", \"test_both_verbose_names_inline (admin_inlines.tests.TestVerboseNameInlineForms)\", \"test_verbose_name_plural_inline (admin_inlines.tests.TestVerboseNameInlineForms)\", \"test_add_url_not_allowed (admin_inlines.tests.TestReadOnlyChangeViewInlinePermissions)\", \"test_extra_inlines_are_not_shown (admin_inlines.tests.TestReadOnlyChangeViewInlinePermissions)\", \"test_get_to_change_url_is_allowed (admin_inlines.tests.TestReadOnlyChangeViewInlinePermissions)\", \"test_inline_delete_buttons_are_not_shown (admin_inlines.tests.TestReadOnlyChangeViewInlinePermissions)\", \"test_inlines_are_rendered_as_read_only (admin_inlines.tests.TestReadOnlyChangeViewInlinePermissions)\", \"test_main_model_is_rendered_as_read_only (admin_inlines.tests.TestReadOnlyChangeViewInlinePermissions)\", \"test_post_to_change_url_not_allowed (admin_inlines.tests.TestReadOnlyChangeViewInlinePermissions)\", \"test_submit_line_shows_only_close_button (admin_inlines.tests.TestReadOnlyChangeViewInlinePermissions)\", \"test_inline_add_fk_add_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_add_fk_noperm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_add_m2m_add_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_add_m2m_noperm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_add_m2m_view_only_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_fk_add_change_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_fk_add_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_fk_all_perms (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_fk_change_del_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_fk_change_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_fk_noperm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_m2m_add_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_m2m_change_perm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_m2m_noperm (admin_inlines.tests.TestInlinePermissions)\", \"test_inline_change_m2m_view_only_perm (admin_inlines.tests.TestInlinePermissions)\", \"Admin inline should invoke local callable when its name is listed in readonly_fields\", \"can_delete should be passed to inlineformset factory.\", \"An object can be created with inlines when it inherits another class.\", \"test_custom_form_tabular_inline_extra_field_label (admin_inlines.tests.TestInline)\", \"A model form with a form field specified (TitleForm.title1) should have\", \"SomeChildModelForm.__init__() overrides the label of a form field.\", \"test_custom_get_extra_form (admin_inlines.tests.TestInline)\", \"test_custom_min_num (admin_inlines.tests.TestInline)\", \"The \\\"View on Site\\\" link is correct for models with a custom primary key\", \"The inlines' model field help texts are displayed when using both the\", \"test_inline_editable_pk (admin_inlines.tests.TestInline)\", \"#18263 -- Make sure hidden fields don't get a column in tabular inlines\", \"test_inline_nonauto_noneditable_inherited_pk (admin_inlines.tests.TestInline)\", \"test_inline_nonauto_noneditable_pk (admin_inlines.tests.TestInline)\", \"test_inline_primary (admin_inlines.tests.TestInline)\", \"test_inlines_plural_heading_foreign_key (admin_inlines.tests.TestInline)\", \"Inlines `show_change_link` for registered models when enabled.\", \"Inlines `show_change_link` disabled for unregistered models.\", \"test_inlines_singular_heading_one_to_one (admin_inlines.tests.TestInline)\", \"The \\\"View on Site\\\" link is correct for locales that use thousand\", \"Autogenerated many-to-many inlines are displayed correctly (#13407)\", \"min_num and extra determine number of forms.\", \"Admin inline `readonly_field` shouldn't invoke parent ModelAdmin callable\", \"test_non_editable_custom_form_tabular_inline_extra_field_label (admin_inlines.tests.TestInline)\", \"Multiple inlines with related_name='+' have correct form prefixes.\", \"Inlines without change permission shows field inputs on add form.\", \"Bug #13174.\", \"test_stacked_inline_edit_form_contains_has_original_class (admin_inlines.tests.TestInline)\", \"Field names are included in the context to output a field-specific\", \"Inlines `show_change_link` disabled by default.\", \"Tabular inlines use ModelForm.Meta.help_texts and labels for read-only\", \"non_field_errors are displayed correctly, including the correct value\"]\n\n[PATCH DIFF]\ndiff --git a/django/contrib/admin/options.py b/django/contrib/admin/options.py\n--- a/django/contrib/admin/options.py\n+++ b/django/contrib/admin/options.py\n@@ -2037,10 +2037,13 @@ def __init__(self, parent_model, admin_site):\n         self.opts = self.model._meta\n         self.has_registered_model = admin_site.is_registered(self.model)\n         super().__init__()\n+        if self.verbose_name_plural is None:\n+            if self.verbose_name is None:\n+                self.verbose_name_plural = self.model._meta.verbose_name_plural\n+            else:\n+                self.verbose_name_plural = format_lazy('{}s', self.verbose_name)\n         if self.verbose_name is None:\n             self.verbose_name = self.model._meta.verbose_name\n-        if self.verbose_name_plural is None:\n-            self.verbose_name_plural = self.model._meta.verbose_name_plural\n \n     @property\n     def media(self):\n",
     "options.py": "import copy\nimport json\nimport re\nfrom functools import partial, update_wrapper\nfrom urllib.parse import quote as urlquote\n\nfrom django import forms\nfrom django.conf import settings\nfrom django.contrib import messages\nfrom django.contrib.admin import helpers, widgets\nfrom django.contrib.admin.checks import (\n    BaseModelAdminChecks, InlineModelAdminChecks, ModelAdminChecks,\n)\nfrom django.contrib.admin.decorators import display\nfrom django.contrib.admin.exceptions import DisallowedModelAdminToField\nfrom django.contrib.admin.templatetags.admin_urls import add_preserved_filters\nfrom django.contrib.admin.utils import (\n    NestedObjects, construct_change_message, flatten_fieldsets,\n    get_deleted_objects, lookup_spawns_duplicates, model_format_dict,\n    model_ngettext, quote, unquote,\n)\nfrom django.contrib.admin.widgets import (\n    AutocompleteSelect, AutocompleteSelectMultiple,\n)\nfrom django.contrib.auth import get_permission_codename\nfrom django.core.exceptions import (\n    FieldDoesNotExist, FieldError, PermissionDenied, ValidationError,\n)\nfrom django.core.paginator import Paginator\nfrom django.db import models, router, transaction\nfrom django.db.models.constants import LOOKUP_SEP\nfrom django.forms.formsets import DELETION_FIELD_NAME, all_valid\nfrom django.forms.models import (\n    BaseInlineFormSet, inlineformset_factory, modelform_defines_fields,\n    modelform_factory, modelformset_factory,\n)\nfrom django.forms.widgets import CheckboxSelectMultiple, SelectMultiple\nfrom django.http import HttpResponseRedirect\nfrom django.http.response import HttpResponseBase\nfrom django.template.response import SimpleTemplateResponse, TemplateResponse\nfrom django.urls import reverse\nfrom django.utils.decorators import method_decorator\nfrom django.utils.html import format_html\nfrom django.utils.http import urlencode\nfrom django.utils.safestring import mark_safe\nfrom django.utils.text import (\n    capfirst, format_lazy, get_text_list, smart_split, unescape_string_literal,\n)\nfrom django.utils.translation import gettext as _, ngettext\nfrom django.views.decorators.csrf import csrf_protect\nfrom django.views.generic import RedirectView\n\nIS_POPUP_VAR = '_popup'\nTO_FIELD_VAR = '_to_field'\n\n\nHORIZONTAL, VERTICAL = 1, 2\n\n\ndef get_content_type_for_model(obj):\n    # Since this module gets imported in the application's root package,\n    # it cannot import models from other applications at the module level.\n    from django.contrib.contenttypes.models import ContentType\n    return ContentType.objects.get_for_model(obj, for_concrete_model=False)\n\n\ndef get_ul_class(radio_style):\n    return 'radiolist' if radio_style == VERTICAL else 'radiolist inline'\n\n\nclass IncorrectLookupParameters(Exception):\n    pass\n\n\n# Defaults for formfield_overrides. ModelAdmin subclasses can change this\n# by adding to ModelAdmin.formfield_overrides.\n\nFORMFIELD_FOR_DBFIELD_DEFAULTS = {\n    models.DateTimeField: {\n        'form_class': forms.SplitDateTimeField,\n        'widget': widgets.AdminSplitDateTime\n    },\n    models.DateField: {'widget': widgets.AdminDateWidget},\n    models.TimeField: {'widget': widgets.AdminTimeWidget},\n    models.TextField: {'widget': widgets.AdminTextareaWidget},\n    models.URLField: {'widget': widgets.AdminURLFieldWidget},\n    models.IntegerField: {'widget': widgets.AdminIntegerFieldWidget},\n    models.BigIntegerField: {'widget': widgets.AdminBigIntegerFieldWidget},\n    models.CharField: {'widget': widgets.AdminTextInputWidget},\n    models.ImageField: {'widget': widgets.AdminFileWidget},\n    models.FileField: {'widget': widgets.AdminFileWidget},\n    models.EmailField: {'widget': widgets.AdminEmailInputWidget},\n    models.UUIDField: {'widget': widgets.AdminUUIDInputWidget},\n}\n\ncsrf_protect_m = method_decorator(csrf_protect)\n\n\nclass BaseModelAdmin(metaclass=forms.MediaDefiningClass):\n    \"\"\"Functionality common to both ModelAdmin and InlineAdmin.\"\"\"\n\n    autocomplete_fields = ()\n    raw_id_fields = ()\n    fields = None\n    exclude = None\n    fieldsets = None\n    form = forms.ModelForm\n    filter_vertical = ()\n    filter_horizontal = ()\n    radio_fields = {}\n    prepopulated_fields = {}\n    formfield_overrides = {}\n    readonly_fields = ()\n    ordering = None\n    sortable_by = None\n    view_on_site = True\n    show_full_result_count = True\n    checks_class = BaseModelAdminChecks\n\n    def check(self, **kwargs):\n        return self.checks_class().check(self, **kwargs)\n\n    def __init__(self):\n        # Merge FORMFIELD_FOR_DBFIELD_DEFAULTS with the formfield_overrides\n        # rather than simply overwriting.\n        overrides = copy.deepcopy(FORMFIELD_FOR_DBFIELD_DEFAULTS)\n        for k, v in self.formfield_overrides.items():\n            overrides.setdefault(k, {}).update(v)\n        self.formfield_overrides = overrides\n\n    def formfield_for_dbfield(self, db_field, request, **kwargs):\n        \"\"\"\n        Hook for specifying the form Field instance for a given database Field\n        instance.\n\n        If kwargs are given, they're passed to the form Field's constructor.\n        \"\"\"\n        # If the field specifies choices, we don't need to look for special\n        # admin widgets - we just need to use a select widget of some kind.\n        if db_field.choices:\n            return self.formfield_for_choice_field(db_field, request, **kwargs)\n\n        # ForeignKey or ManyToManyFields\n        if isinstance(db_field, (models.ForeignKey, models.ManyToManyField)):\n            # Combine the field kwargs with any options for formfield_overrides.\n            # Make sure the passed in **kwargs override anything in\n            # formfield_overrides because **kwargs is more specific, and should\n            # always win.\n            if db_field.__class__ in self.formfield_overrides:\n                kwargs = {**self.formfield_overrides[db_field.__class__], **kwargs}\n\n            # Get the correct formfield.\n            if isinstance(db_field, models.ForeignKey):\n                formfield = self.formfield_for_foreignkey(db_field, request, **kw\n... [truncated at 6000 chars]"
@@ -9,63 +9,63 @@
       {
         "data": {
           "id": "c1",
-          "label": "Django Inline verbose_name_plural does not default from verbose_name",
+          "label": "Inline admin's verbose_name_plural should default to pluralized verbose_name if verbose_name is set",
           "type": "Claim",
-          "source": "test_django__django-13710.txt:L3-L12",
+          "source": "test_django__django-13710.txt:L3-L20",
           "confidence": 0.9
         }
       },
       {
         "data": {
           "id": "c2",
-          "label": "This behavior is inconsistent with Django model Meta behavior",
+          "label": "Current behavior defaults verbose_name_plural to model's Meta verbose_name_plural ignoring Inline verbose_name",
           "type": "Claim",
-          "source": "test_django__django-13710.txt:L3-L12",
+          "source": "test_django__django-13710.txt:L3-L20",
           "confidence": 0.9
         }
       },
       {
         "data": {
           "id": "c3",
-          "label": "Proposed behavior: Inline verbose_name_plural defaults to verbose_name + 's' if verbose_name_plural unset",
+          "label": "The patch modifies Inline admin init to derive verbose_name_plural from verbose_name if set",
           "type": "Claim",
-          "source": "test_django__django-13710.txt:L3-L12",
-          "confidence": 0.9
+          "source": "django__django-13710.py:L2037-L2050",
+          "confidence": 0.95
         }
       },
       {
         "data": {
-          "id": "e1",
-          "label": "Patch code sets verbose_name_plural from verbose_name by default in Inline __init__",
-          "type": "Evidence",
-          "source": "django__django-13710.py:L2037-L2046",
-          "confidence": 1.0
+          "id": "c4",
+          "label": "Aligning Inline verbose_name_plural with verbose_name pluralization reduces developer confusion and inconsistency",
+          "type": "Claim",
+          "source": "test_django__django-13710.txt:L3-L20",
+          "confidence": 0.85
         }
       }
     ],
     "edges": [
       {
         "data": {
-          "id": "supports:e1->c3",
-          "source": "e1",
+          "id": "implies:c1->c3",
+          "source": "c1",
           "target": "c3",
-          "type": "supports"
+          "type": "implies"
         }
       },
       {
         "data": {
-          "id": "implies:c3->c1",
-          "source": "c3",
+          "id": "contradicts:c2->c1",
+          "source": "c2",
           "target": "c1",
-          "type": "implies"
+          "type": "contradicts"
         }
       },
       {
         "data": {
-          "id": "implies:c3->c2",
+          "id": "supports:c3->c4",
           "source": "c3",
-          "target": "c2",
-          "type": "implies"
+          "target": "c4",
+          "type": "supports"
         }
       }
     ]

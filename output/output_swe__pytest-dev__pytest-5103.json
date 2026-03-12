@@ -1,5 +1,5 @@
 {
-  "text": "The patch introduces a special rewrite in the assertion rewriting process for calls to the builtin 'all' function when used with generator expressions or list comprehensions. Instead of asserting 'all(...)' directly, it unrolls the iterable into a for loop that asserts each element individually, producing better failure reports as in explicit for loops. This improves the diagnostic messages of assertions using 'all'.",
+  "text": "The patch proposal improves pytest assertion rewriting by transforming assertions using all() with generator or list comprehensions into explicit for-loop asserts. This unrolling enables more informative error messages about which element failed, similar to explicit for-loop assertions, addressing poor diagnostics currently produced by all().",
   "sources": {
     "test_pytest-dev__pytest-5103.txt": "[ISSUE / BUG REPORT]\nUnroll the iterable for all/any calls to get better reports\nSometime I need to assert some predicate on all of an iterable, and for that the builtin functions `all`/`any` are great - but the failure messages aren't useful at all!\n\nFor example - the same test written in three ways:\n\n\n\n- A generator expression\n\n```sh                                                                                                                                                                                                                         \n\n    def test_all_even():\n\n        even_stevens = list(range(1,100,2))\n\n>       assert all(is_even(number) for number in even_stevens)\n\nE       assert False\n\nE        +  where False = all(<generator object test_all_even.<locals>.<genexpr> at 0x101f82ed0>)\n\n```\n\n- A list comprehension\n\n```sh\n\n    def test_all_even():\n\n        even_stevens = list(range(1,100,2))\n\n>       assert all([is_even(number) for number in even_stevens])\n\nE       assert False\n\nE        +  where False = all([False, False, False, False, False, False, ...])\n\n```\n\n- A for loop\n\n```sh\n\n    def test_all_even():\n\n        even_stevens = list(range(1,100,2))\n\n        for number in even_stevens:\n\n>           assert is_even(number)\n\nE           assert False\n\nE            +  where False = is_even(1)\n\n\n\ntest_all_any.py:7: AssertionError\n\n```\n\nThe only one that gives a meaningful report is the for loop - but it's way more wordy, and `all` asserts don't translate to a for loop nicely (I'll have to write a `break` or a helper function - yuck)\n\nI propose the assertion re-writer \"unrolls\" the iterator to the third form, and then uses the already existing reports.\n\n\n\n- [x] Include a detailed description of the bug or suggestion\n\n- [x] `pip list` of the virtual environment you are using\n\n```\n\nPackage        Version\n\n-------------- -------\n\natomicwrites   1.3.0  \n\nattrs          19.1.0 \n\nmore-itertools 7.0.0  \n\npip            19.0.3 \n\npluggy         0.9.0  \n\npy             1.8.0  \n\npytest         4.4.0  \n\nsetuptools     40.8.0 \n\nsix            1.12.0 \n\n```\n\n- [x] pytest and operating system versions\n\n`platform darwin -- Python 3.7.3, pytest-4.4.0, py-1.8.0, pluggy-0.9.0`\n\n- [x] Minimal example if possible\n\n[FAILING TESTS]\n  FAIL  [\"testing/test_assertrewrite.py::TestAssertionRewrite::test_unroll_expression\"]\n\n[PASSING TESTS (sample)]\n  PASS  [\"testing/test_assertrewrite.py::TestAssertionRewrite::test_place_initial_imports\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_dont_rewrite\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_name\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_dont_rewrite_if_hasattr_fails\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_assert_already_has_message\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_boolop\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_short_circuit_evaluation\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_unary_op\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_binary_op\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_boolop_percent\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_call\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_attribute\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_comparisons\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_len\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_custom_reprcompare\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_assert_raising_nonzero_in_comparison\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_formatchar\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_custom_repr\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_custom_repr_non_ascii\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_read_pyc\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_dont_rewrite_plugin\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_assertion_message\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_assertion_message_multiline\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_assertion_message_tuple\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_assertion_message_expr\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_assertion_message_escape\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_assertion_messages_bytes\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_at_operator_issue1290\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_starred_with_side_effect\", \"testing/test_assertrewrite.py::TestAssertionRewrite::test_for_loop\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_pycache_is_a_file\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_pycache_is_readonly\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_zipfile\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_readonly\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_dont_write_bytecode\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_orphaned_pyc_file\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_pyc_vs_pyo\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_package\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_translate_newlines\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_package_without__init__py\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_rewrite_warning\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_rewrite_module_imported_from_conftest\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_remember_rewritten_modules\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_rewrite_warning_using_pytest_plugins\", \"testing/test_assertrewrite.py::TestRewriteOnImport::test_rewrite_warning_using_pytest_plugins_env_var\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_loader_is_package_false_for_module\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_loader_is_package_true_for_package\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_sys_meta_path_munged\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_write_pyc\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_resources_provider_for_loader\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_reload_is_same\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_reload_reloads\", \"testing/test_assertrewrite.py::TestAssertionRewriteHookDetails::test_get_data_support\", \"testing/test_assertrewrite.py::test_issue731\", \"testing/test_assertrewrite.py::TestIssue925::test_simple_case\", \"testing/test_assertrewrite.py::TestIssue925::test_long_case\", \"testing/test_assertrewrite.py::TestIssue925::test_many_brackets\", \"testing/test_assertrewrite.py::TestIssue2121::test_rewrite_python_files_contain_subdirs\", \"testing/test_assertrewrite.py::test_source_mtime_long_long[-1]\", \"testing/test_assertrewrite.py::test_source_mtime_long_long[1]\", \"testing/test_assertrewrite.py::test_rewrite_infinite_recursion\", \"testing/test_assertrewrite.py::TestEarlyRewriteBailout::test_basic\", \"testing/test_assertrewrite.py::TestEarlyRewriteBailout::test_pattern_contains_subdirectories\", \"testing/test_assertrewrite.py::TestEarlyRewriteBailout::test_cwd_changed\"]\n\n[PATCH DIFF]\ndiff --git a/src/_pytest/assertion/rewrite.py b/src/_pytest/assertion/rewrite.py\n--- a/src/_pytest/assertion/rewrite.py\n+++ b/src/_pytest/assertion/rewrite.py\n@@ -964,6 +964,8 @@ def visit_Call_35(self, call):\n         \"\"\"\n         visit `ast.Call` nodes on Python3.5 and after\n         \"\"\"\n+        if isinstance(call.func, ast.Name) and call.func.id == \"all\":\n+            return self._visit_all(call)\n         new_func, func_expl = self.visit(call.func)\n         arg_expls = []\n         new_args = []\n@@ -987,6 +989,27 @@ def visit_Call_35(self, call):\n         outer_expl = \"%s\\n{%s = %s\\n}\" % (res_expl, res_expl, expl)\n         return res, outer_expl\n \n+    def _visit_all(self, call):\n+        \"\"\"Special rewrite for the builtin all function, see #5062\"\"\"\n+        if not isinstance(call.args[0], (ast.GeneratorExp, ast.ListComp)):\n+            return\n+        gen_exp = call.args[0]\n+        assertion_module = ast.Module(\n+            body=[ast.Assert(test=gen_exp.elt, lineno=1, msg=\"\", col_offset=1)]\n+        )\n+        AssertionRewriter(module_path=None, config=None).run(assertion_module)\n+        for_loop = ast.For(\n+            iter=gen_exp.generators[0].iter,\n+            target=gen_exp.generators[0].target,\n+            body=assertion_module.body,\n+            orelse=[],\n+        )\n+        self.statements.append(for_loop)\n+        return (\n+            ast.Num(n=1),\n+            \"\",\n+        )  # Return an empty expression, all the asserts are in the for_loop\n+\n     def visit_Starred(self, starred):\n         # From Python 3.5, a Starred node can appear in a function call\n         res, expl = self.visit(starred.value)\n@@ -997,6 +1020,8 @@ def visit_Call_legacy(self, call):\n         \"\"\"\n         visit `ast.Call nodes on 3.4 and below`\n         \"\"\"\n+        if isinstance(call.func, ast.Name) and call.func.id == \"all\":\n+            return self._visit_all(call)\n         new_func, func_expl = self.visit(call.func)\n         arg_expls = []\n         new_args = []\n",
     "rewrite.py": "\"\"\"Rewrite assertion AST to produce nice error messages\"\"\"\nfrom __future__ import absolute_import\nfrom __future__ import division\nfrom __future__ import print_function\n\nimport ast\nimport errno\nimport imp\nimport itertools\nimport marshal\nimport os\nimport re\nimport string\nimport struct\nimport sys\nimport types\n\nimport atomicwrites\nimport py\nimport six\n\nfrom _pytest._io.saferepr import saferepr\nfrom _pytest.assertion import util\nfrom _pytest.assertion.util import (  # noqa: F401\n    format_explanation as _format_explanation,\n)\nfrom _pytest.compat import spec_from_file_location\nfrom _pytest.pathlib import fnmatch_ex\nfrom _pytest.pathlib import PurePath\n\n# pytest caches rewritten pycs in __pycache__.\nif hasattr(imp, \"get_tag\"):\n    PYTEST_TAG = imp.get_tag() + \"-PYTEST\"\nelse:\n    if hasattr(sys, \"pypy_version_info\"):\n        impl = \"pypy\"\n    elif sys.platform == \"java\":\n        impl = \"jython\"\n    else:\n        impl = \"cpython\"\n    ver = sys.version_info\n    PYTEST_TAG = \"%s-%s%s-PYTEST\" % (impl, ver[0], ver[1])\n    del ver, impl\n\nPYC_EXT = \".py\" + (__debug__ and \"c\" or \"o\")\nPYC_TAIL = \".\" + PYTEST_TAG + PYC_EXT\n\nASCII_IS_DEFAULT_ENCODING = sys.version_info[0] < 3\n\nif sys.version_info >= (3, 5):\n    ast_Call = ast.Call\nelse:\n\n    def ast_Call(a, b, c):\n        return ast.Call(a, b, c, None, None)\n\n\nclass AssertionRewritingHook(object):\n    \"\"\"PEP302 Import hook which rewrites asserts.\"\"\"\n\n    def __init__(self, config):\n        self.config = config\n        self.fnpats = config.getini(\"python_files\")\n        self.session = None\n        self.modules = {}\n        self._rewritten_names = set()\n        self._register_with_pkg_resources()\n        self._must_rewrite = set()\n        # flag to guard against trying to rewrite a pyc file while we are already writing another pyc file,\n        # which might result in infinite recursion (#3506)\n        self._writing_pyc = False\n        self._basenames_to_check_rewrite = {\"conftest\"}\n        self._marked_for_rewrite_cache = {}\n        self._session_paths_checked = False\n\n    def set_session(self, session):\n        self.session = session\n        self._session_paths_checked = False\n\n    def _imp_find_module(self, name, path=None):\n        \"\"\"Indirection so we can mock calls to find_module originated from the hook during testing\"\"\"\n        return imp.find_module(name, path)\n\n    def find_module(self, name, path=None):\n        if self._writing_pyc:\n            return None\n        state = self.config._assertstate\n        if self._early_rewrite_bailout(name, state):\n            return None\n        state.trace(\"find_module called for: %s\" % name)\n        names = name.rsplit(\".\", 1)\n        lastname = names[-1]\n        pth = None\n        if path is not None:\n            # Starting with Python 3.3, path is a _NamespacePath(), which\n            # causes problems if not converted to list.\n            path = list(path)\n            if len(path) == 1:\n                pth = path[0]\n        if pth is None:\n            try:\n                fd, fn, desc = self._imp_find_module(lastname, path)\n            except ImportError:\n                return None\n            if fd is not None:\n                fd.close()\n            tp = desc[2]\n            if tp == imp.PY_COMPILED:\n                if hasattr(imp, \"source_from_cache\"):\n                    try:\n                        fn = imp.source_from_cache(fn)\n                    except ValueError:\n                        # Python 3 doesn't like orphaned but still-importable\n                        # .pyc files.\n                        fn = fn[:-1]\n                else:\n                    fn = fn[:-1]\n            elif tp != imp.PY_SOURCE:\n                # Don't know what this is.\n                return None\n        else:\n            fn = os.path.join(pth, name.rpartition(\".\")[2] + \".py\")\n\n        fn_pypath = py.path.local(fn)\n        if not self._should_rewrite(name, fn_pypath, state):\n            return None\n\n        self._rewritten_names.add(name)\n\n        # The requested module looks like a test file, so rewrite it. This is\n        # the most magical part of the process: load the source, rewrite the\n        # asserts, and load the rewritten source. We also cache the rewritten\n        # module code in a special pyc. We must be aware of the possibility of\n        # concurrent pytest processes rewriting and loading pycs. To avoid\n        # tricky race conditions, we maintain the following invariant: The\n        # cached pyc is always a complete, valid pyc. Operations on it must be\n        # atomic. POSIX's atomic rename comes in handy.\n        write = not sys.dont_write_bytecode\n        cache_dir = os.path.join(fn_pypath.dirname, \"__pycache__\")\n        if write:\n            try:\n                os.mkdir(cache_dir)\n            except OSError:\n                e = sys.exc_info()[1].errno\n                if e == errno.EEXIST:\n                    # Either the __pycache__ directory already exists (the\n                    # common case) or it's blocked by a non-dir node. In the\n                    # latter case, we'll ignore it in _write_pyc.\n                    pass\n                elif e in [errno.ENOENT, errno.ENOTDIR]:\n                    # One of the path components was not a directory, likely\n                    # because we're in a zip file.\n                    write = False\n                elif e in [errno.EACCES, errno.EROFS, errno.EPERM]:\n                    state.trace(\"read only directory: %r\" % fn_pypath.dirname)\n                    write = False\n                else:\n                    raise\n        cache_name = fn_pypath.basename[:-3] + PYC_TAIL\n        pyc = os.path.join(cache_dir, cache_name)\n        # Notice that even if we're in a read-only directory, I'm going\n        # to check for a cached pyc. This may not be optimal...\n        co = _read_pyc(fn_pypath, pyc, state.trace)\n        if co is None:\n            state.trace(\"rewriting %r\" % (fn,))\n            source_stat, co = _rewrite_test(self.config, fn_pypath)\n        \n... [truncated at 6000 chars]"
@@ -9,32 +9,83 @@
       {
         "data": {
           "id": "c1",
-          "label": "Using all(...) with a generator expression in assert statements produces poor failure messages",
+          "label": "Using all() or any() with generator expressions results in poor failure messages.",
           "type": "Claim",
-          "source": "test_pytest-dev__pytest-5103.txt:L4-L14",
+          "source": "test_pytest-dev__pytest-5103.txt:L4-L17",
           "confidence": 0.9
         }
       },
       {
         "data": {
           "id": "c2",
-          "label": "For loops asserting each element provide clearer failure reports",
+          "label": "Explicit for-loop asserts give better, detailed failure reports in pytest.",
           "type": "Claim",
-          "source": "test_pytest-dev__pytest-5103.txt:L15-L22",
+          "source": "test_pytest-dev__pytest-5103.txt:L18-L29",
           "confidence": 0.9
         }
       },
       {
         "data": {
           "id": "c3",
-          "label": "Unrolling all(...) assertions into for loops during rewrite improves error reporting",
+          "label": "Rewriting all() calls to for-loop asserts improves error reporting in pytest assertion rewriting.",
           "type": "Claim",
-          "source": "patch:L964-L1024",
+          "source": "test_pytest-dev__pytest-5103.txt:L31-L38; src/_pytest/assertion/rewrite.py:L963-L1028",
           "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Example test shows all() assertion reports only False without detail.",
+          "type": "Evidence",
+          "source": "test_pytest-dev__pytest-5103.txt:L7-L14",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "e2",
+          "label": "Example test shows for-loop assertions report exact failing element and value.",
+          "type": "Evidence",
+          "source": "test_pytest-dev__pytest-5103.txt:L21-L29",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "e3",
+          "label": "Patch code transforms all() with generator/list comprehension into for loop asserts in AST rewriting.",
+          "type": "Evidence",
+          "source": "src/_pytest/assertion/rewrite.py:L963-L1028",
+          "confidence": 1.0
         }
       }
     ],
     "edges": [
+      {
+        "data": {
+          "id": "supports:e1->c1",
+          "source": "e1",
+          "target": "c1",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:e2->c2",
+          "source": "e2",
+          "target": "c2",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:e3->c3",
+          "source": "e3",
+          "target": "c3",
+          "type": "supports"
+        }
+      },
       {
         "data": {
           "id": "depends-on:c1->c3",
@@ -45,10 +96,10 @@
       },
       {
         "data": {
-          "id": "supports:c2->c3",
+          "id": "depends-on:c2->c3",
           "source": "c2",
           "target": "c3",
-          "type": "supports"
+          "type": "depends-on"
         }
       }
     ]

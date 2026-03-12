@@ -49,27 +49,18 @@ Run everything with a single command — installs deps, generates graphs, starts
 python run.py
 ```
 
-First run will prompt for your OpenAI API key and offer to save it to `.env` for future runs.
+First run will prompt for your OpenAI API key and offer to save it to `.env` for future runs. It might take a while.
 
 ### Options
 
 ```bash
 python run.py              # QuixBugs cases only (test_case/)
-python run.py --swe        # also fetch & process SWE-bench Lite cases
-python run.py --no-pipeline  # skip generation, just view existing output
-python run.py --dir <path>   # process a custom input directory
+python run.py --swe        # Also fetch & process SWE-bench Lite cases
+python run.py --no-pipeline  # Skip generation, just view existing output
+python run.py --dir <path>   # Process a custom input directory if you want
 ```
 
 ---
-
-## Manual Steps (advanced)
-
-### Generate graphs
-
-```bash
-python pipeline.py                        # QuixBugs → output/
-python pipeline.py --dir swe_cases --out output_swe  # SWE-bench → output_swe/
-```
 
 ### View visualization
 
