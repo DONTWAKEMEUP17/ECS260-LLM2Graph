@@ -1,20 +1,20 @@
 {
-  "text": "The provided topological_ordering function is incorrect because it does not correctly order nodes according to their dependencies. The function tries to form ordered_nodes by starting from nodes without incoming edges, but the loop condition and logic for adding next nodes are flawed. This leads to incomplete and improperly ordered results, as shown by failing test cases where nodes dependent on others are missing or appear out of order.",
+  "text": "The implementation of topological_ordering is incorrect because it only initializes ordered_nodes with nodes having no incoming edges and then tries to append nodes whose outgoing nodes are subsets of ordered_nodes. This process does not correctly capture the dependencies for a full topological sort, leading to missing nodes and an incorrect order, as shown by the failed tests.",
   "elements": {
     "nodes": [
       {
         "data": {
           "id": "c1",
-          "label": "topological_ordering does not return nodes in correct topological order",
+          "label": "topological_ordering function produces incorrect topological order",
           "type": "Claim",
-          "source": "test outputs and asserts failing with incorrect order and missing nodes",
-          "confidence": 1.0
+          "source": "test output failure cases",
+          "confidence": 0.9
         }
       },
       {
         "data": {
           "id": "e1",
-          "label": "Test failures show output missing nodes and nodes appearing before their dependencies",
+          "label": "Tests fail with missing nodes and wrong order in results",
           "type": "Evidence",
           "source": "test_topological_ordering.txt",
           "confidence": 1.0
@@ -23,18 +23,18 @@
       {
         "data": {
           "id": "e2",
-          "label": "Code logic uses incorrect condition `set(ordered_nodes).issuperset(nextnode.outgoing_nodes)` to add nodes",
+          "label": "ordered_nodes initialization only includes nodes without incoming edges",
           "type": "Evidence",
-          "source": "topological_ordering.py code analysis",
-          "confidence": 1.0
+          "source": "code topological_ordering.py lines 2-4",
+          "confidence": 0.9
         }
       },
       {
         "data": {
-          "id": "a1",
-          "label": "Correct topological sorting requires nodes to appear before all their outgoing nodes",
-          "type": "Assumption",
-          "source": null,
+          "id": "e3",
+          "label": "Appending nodes based on subset condition does not guarantee correct dependency resolution",
+          "type": "Evidence",
+          "source": "code topological_ordering.py lines 6-8",
           "confidence": 0.9
         }
       }
@@ -58,10 +58,10 @@
       },
       {
         "data": {
-          "id": "depends-on:a1->c1",
-          "source": "a1",
+          "id": "supports:e3->c1",
+          "source": "e3",
           "target": "c1",
-          "type": "depends-on"
+          "type": "supports"
         }
       }
     ]

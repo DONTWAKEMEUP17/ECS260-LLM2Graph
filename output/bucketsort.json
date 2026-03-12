@@ -1,11 +1,11 @@
 {
-  "text": "The bucketsort function is intended to sort a list of integers by counting occurrences; however, it incorrectly iterates over the input array instead of the counts array during reconstructing the sorted list, resulting in a wrong output list with many zeros and failing all tests except one.",
+  "text": "The bucketsort function implementation is incorrect because it iterates over the input array instead of the counts array when reconstructing the sorted array, leading to wrong output and test failures.",
   "elements": {
     "nodes": [
       {
         "data": {
           "id": "c1",
-          "label": "bucketsort outputs incorrect sorted lists causing test failures",
+          "label": "bucketsort produces incorrect sorted output as per test failures.",
           "type": "Claim",
           "source": "test_bucketsort.txt",
           "confidence": 1.0
@@ -14,7 +14,16 @@
       {
         "data": {
           "id": "c2",
-          "label": "Function iterates incorrectly over arr instead of counts during sorted array construction",
+          "label": "The for loop iterates over 'arr' instead of 'counts' when reconstructing sorted_arr.",
+          "type": "Claim",
+          "source": "bucketsort.py",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "c3",
+          "label": "Iterating over 'arr' instead of 'counts' causes incorrect counts usage, leading to incorrect output.",
           "type": "Claim",
           "source": "bucketsort.py",
           "confidence": 1.0
@@ -24,8 +33,16 @@
     "edges": [
       {
         "data": {
-          "id": "implies:c2->c1",
+          "id": "implies:c2->c3",
           "source": "c2",
+          "target": "c3",
+          "type": "implies"
+        }
+      },
+      {
+        "data": {
+          "id": "implies:c3->c1",
+          "source": "c3",
           "target": "c1",
           "type": "implies"
         }

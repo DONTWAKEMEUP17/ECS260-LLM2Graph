@@ -1,0 +1,69 @@
+{
+  "text": "The patch modifies the stream_decode_response_unicode function to correctly handle the response encoding by using r.encoding or falling back to r.apparent_encoding if r.encoding is None. It adds proper error handling during decoder creation and ensures decoding uses the correct encoding, which resolves confusion when iter_content with decode_unicode=True returns bytes instead of unicode in some cases. This aligns iter_content behavior with expectations and the r.text property.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "iter_content(decode_unicode=True) should return unicode objects similar to r.text.",
+          "type": "Claim",
+          "source": "user report and understanding of expected behavior",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "The original stream_decode_response_unicode function used r.encoding directly without fallback, lacking error handling.",
+          "type": "Claim",
+          "source": "requests/utils.py before patch",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c3",
+          "label": "The patched stream_decode_response_unicode uses r.encoding, falls back to r.apparent_encoding, and adds decoding error handling.",
+          "type": "Claim",
+          "source": "patch diff in requests/utils.py",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "c4",
+          "label": "The patch fixes issues where iter_content(decode_unicode=True) returns bytes instead of unicode, making it consistent with r.text.",
+          "type": "Claim",
+          "source": "user issue report and patch effect",
+          "confidence": 0.95
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "contradicts:c2->c3",
+          "source": "c2",
+          "target": "c3",
+          "type": "contradicts"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:c3->c4",
+          "source": "c3",
+          "target": "c4",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "depends-on:c1->c4",
+          "source": "c1",
+          "target": "c4",
+          "type": "depends-on"
+        }
+      }
+    ]
+  }
+}

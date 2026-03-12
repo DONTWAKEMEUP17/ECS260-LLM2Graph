@@ -25,3 +25,7 @@ Thumbs.db
 .env
 results/
 cyto.json
+
+# Datasets
+output_swe/
+swe_cases/

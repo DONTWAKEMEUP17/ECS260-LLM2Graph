@@ -1,0 +1,86 @@
+{
+  "text": "The report identifies inconsistency in Django admin's Inline classes where the default plural name (verbose_name_plural) does not derive from the singular name (verbose_name) if set, unlike the model's Meta class behavior. The proposed fix makes verbose_name_plural default to the verbose_name with an 's' suffix if verbose_name_plural is not explicitly set. This change aims for intuitive defaults in admin inline naming.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "Django Inline verbose_name_plural does not default based on verbose_name causing confusion and inconsistency",
+          "type": "Claim",
+          "source": "issue description and user observation",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "Setting verbose_name_plural based on verbose_name by default improves clarity and consistency",
+          "type": "Claim",
+          "source": "author's proposal in issue",
+          "confidence": 0.8
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Current Django inline verbose_name_plural uses model Meta verbose_name_plural or model name instead of inline verbose_name",
+          "type": "Evidence",
+          "source": "issue description",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e2",
+          "label": "Model Meta automatically bases verbose_name_plural on verbose_name if verbose_name_plural is not set",
+          "type": "Evidence",
+          "source": "issue description",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e3",
+          "label": "Patch implements verbose_name_plural defaulting to verbose_name + 's' if verbose_name_plural is None",
+          "type": "Evidence",
+          "source": "patch diff",
+          "confidence": 0.95
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "supports:e1->c1",
+          "source": "e1",
+          "target": "c1",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:e2->c1",
+          "source": "e2",
+          "target": "c1",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:e3->c2",
+          "source": "e3",
+          "target": "c2",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "depends-on:c2->c1",
+          "source": "c2",
+          "target": "c1",
+          "type": "depends-on"
+        }
+      }
+    ]
+  }
+}

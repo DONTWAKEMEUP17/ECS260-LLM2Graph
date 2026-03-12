@@ -1,49 +1,83 @@
 {
-  "text": "The gcd function has a bug where it incorrectly recurses with parameters (a % b, b) instead of (b, a % b), causing infinite recursion and maximum recursion depth errors in tests.",
+  "text": "The gcd function implementation causes infinite recursion because the recursive call uses gcd(a % b, b) instead of gcd(b, a % b). The base case is correct when b == 0, but the parameters passed in the recursive call do not reduce b, leading to no termination and RecursionError in tests.",
   "elements": {
     "nodes": [
       {
         "data": {
           "id": "c1",
-          "label": "gcd function produces infinite recursion causing RecursionError.",
+          "label": "gcd function causes infinite recursion because recursive call is gcd(a % b, b)",
           "type": "Claim",
-          "source": "test_gcd.txt line failures",
-          "confidence": 0.9
-        }
-      },
-      {
-        "data": {
-          "id": "c2",
-          "label": "gcd function recurses with wrong argument order (a % b, b).",
-          "type": "Claim",
-          "source": "code gcd.py line 5",
+          "source": "code:gcd.py L3-L7",
           "confidence": 0.95
         }
       },
       {
         "data": {
-          "id": "a1",
-          "label": "Euclid's algorithm requires recursive calls with (b, a % b).",
-          "type": "Assumption",
-          "source": "math theory on gcd",
+          "id": "c2",
+          "label": "Base case when b == 0 is correctly implemented",
+          "type": "Claim",
+          "source": "code:gcd.py L4-L5",
           "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c3",
+          "label": "Recursive call should be gcd(b, a % b) to ensure termination",
+          "type": "Claim",
+          "source": "common gcd algorithm knowledge",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "RecursionError in tests: maximum recursion depth exceeded",
+          "type": "Evidence",
+          "source": "test_gcd.txt",
+          "confidence": 0.99
+        }
+      },
+      {
+        "data": {
+          "id": "e2",
+          "label": "Recursive call is gcd(a % b, b), b does not change, causing infinite loops",
+          "type": "Evidence",
+          "source": "code:gcd.py analysis",
+          "confidence": 0.95
         }
       }
     ],
     "edges": [
       {
         "data": {
-          "id": "implies:c2->c1",
-          "source": "c2",
+          "id": "supports:e1->c1",
+          "source": "e1",
           "target": "c1",
-          "type": "implies"
+          "type": "supports"
         }
       },
       {
         "data": {
-          "id": "supports:a1->c2",
-          "source": "a1",
-          "target": "c2",
+          "id": "contradicts:c2->c1",
+          "source": "c2",
+          "target": "c1",
+          "type": "contradicts"
+        }
+      },
+      {
+        "data": {
+          "id": "contradicts:c3->c1",
+          "source": "c3",
+          "target": "c1",
+          "type": "contradicts"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:e2->c1",
+          "source": "e2",
+          "target": "c1",
           "type": "supports"
         }
       }

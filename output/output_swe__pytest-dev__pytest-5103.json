@@ -1,0 +1,103 @@
+{
+  "text": "The issue report explains that using all/any with generator expressions or list comprehensions in asserts produces poor failure messages, while a for-loop with an assert gives better reports. The suggested improvement is for the assertion rewriter to \"unroll\" calls like all(...) into an explicit for-loop with an assert, improving failure messages without losing brevity. The provided patch implements this by detecting calls to the builtin all with a generator or list comprehension, converting it into a for-loop that asserts individual elements. This is supported by adding a special _visit_all function to the assertion rewriter which injects asserts in a for-loop, then returns a dummy ast.Num node. This approach improves error reporting for all/any asserts without requiring manual rewrites by users.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "Asserting with all/any and a generator produces unhelpful failure messages.",
+          "type": "Claim",
+          "source": "issue text: example outputs with all(generator) and list comprehension all([...]) shows unhelpful messages.",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "Asserting with a for-loop and explicit asserts produces better failure messages.",
+          "type": "Claim",
+          "source": "issue text: example given of explicit for-loop producing detailed failure about which element failed.",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "c3",
+          "label": "Unrolling all/any calls into explicit for-loops with asserts improves error reports.",
+          "type": "Claim",
+          "source": "issue proposal and patch description.",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Failure messages from all(generator) show only False without detailed info.",
+          "type": "Evidence",
+          "source": "example output in issue text.",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "e2",
+          "label": "Failure messages from for-loop with assert show exact failing element and value.",
+          "type": "Evidence",
+          "source": "example output in issue text.",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "a1",
+          "label": "Better failure messages improve developer experience and debugging speed.",
+          "type": "Assumption",
+          "source": null,
+          "confidence": 0.85
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "supports:e1->c1",
+          "source": "e1",
+          "target": "c1",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:e2->c2",
+          "source": "e2",
+          "target": "c2",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "implies:c1->c3",
+          "source": "c1",
+          "target": "c3",
+          "type": "implies"
+        }
+      },
+      {
+        "data": {
+          "id": "implies:c2->c3",
+          "source": "c2",
+          "target": "c3",
+          "type": "implies"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:a1->c3",
+          "source": "a1",
+          "target": "c3",
+          "type": "supports"
+        }
+      }
+    ]
+  }
+}

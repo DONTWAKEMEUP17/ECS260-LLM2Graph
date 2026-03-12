@@ -1,0 +1,61 @@
+{
+  "text": "The blueprint name must not contain a dot ('.') character to prevent conflicts with nested blueprint naming conventions. Likewise, endpoint names and view function names must not have dots to ensure unique and valid naming. If a dot is present, a ValueError is raised. This prevents issues in blueprint registration and routing.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "Blueprint name must not contain a dot character to avoid conflicts.",
+          "type": "Claim",
+          "source": "patch diff line 191-194",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "Endpoint and view function names must not contain dots for valid routing.",
+          "type": "Claim",
+          "source": "patch diff line 365-372",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Code raises ValueError if blueprint name contains dot.",
+          "type": "Evidence",
+          "source": "patch diff line 192-194",
+          "confidence": 1.0
+        }
+      },
+      {
+        "data": {
+          "id": "e2",
+          "label": "Code raises ValueError if endpoint or view_func.__name__ contains dot.",
+          "type": "Evidence",
+          "source": "patch diff line 366-372",
+          "confidence": 1.0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "supports:e1->c1",
+          "source": "e1",
+          "target": "c1",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:e2->c2",
+          "source": "e2",
+          "target": "c2",
+          "type": "supports"
+        }
+      }
+    ]
+  }
+}

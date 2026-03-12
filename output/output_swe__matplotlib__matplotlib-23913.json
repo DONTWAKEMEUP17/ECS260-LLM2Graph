@@ -1,0 +1,35 @@
+{
+  "text": "The legend class in Matplotlib has been enhanced to include a new keyword parameter 'draggable' in its constructor to allow creation of draggable legends directly. Previously, legends had to be made draggable only after creation, which was less convenient. This feature adds an optional boolean 'draggable' parameter defaulting to False and sets the legend draggable state during initialization.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "Legends can be made draggable only after creation, not at creation",
+          "type": "Claim",
+          "source": "issue report: 'There is not keyword to make legend draggable at creation'",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "Adding a 'draggable' keyword parameter to the Legend constructor enables legends to be draggable upon creation",
+          "type": "Claim",
+          "source": "patch diff adding 'draggable' parameter and calling set_draggable in __init__",
+          "confidence": 0.95
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "implies:c2->c1",
+          "source": "c2",
+          "target": "c1",
+          "type": "implies"
+        }
+      }
+    ]
+  }
+}

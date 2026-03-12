@@ -1,0 +1,52 @@
+{
+  "text": "The bug report identifies a problem in the Mod class's eval method: for symbolic expressions like x**2 % x, the modulo result is not always zero when x is not an integer. The current implementation checks whether the exponent is an integer but does not ensure the base (q) is integer before returning zero. The patch fixes this by adding conditions that both the base q and exponent are integers and the exponent is positive before returning zero. This prevents incorrect simplifications when the base is a non-integer, such as a float, thus addressing failing tests related to Mod's behavior.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "Mod(x**2, x) should be 0 when x is integer exponent and base is integer.",
+          "type": "Claim",
+          "source": "code eval method and docstring example.",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "Current Mod.eval returns zero for x**2 % x even if x is non-integer, which is incorrect.",
+          "type": "Claim",
+          "source": "issue description and example with x=1.5.",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "c3",
+          "label": "Adding checks that base q is integer and exponent is positive fixes the incorrect simplification.",
+          "type": "Claim",
+          "source": "patch diff in eval method.",
+          "confidence": 0.95
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "contradicts:c1->c2",
+          "source": "c1",
+          "target": "c2",
+          "type": "contradicts"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:c3->c2",
+          "source": "c3",
+          "target": "c2",
+          "type": "supports"
+        }
+      }
+    ]
+  }
+}

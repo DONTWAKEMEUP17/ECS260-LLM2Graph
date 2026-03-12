@@ -1,0 +1,69 @@
+{
+  "text": "The issue is that in requests/sessions.py, the HTTP method is converted using builtin_str(method), which turns a byte string like b'GET' into a literal string \"b'GET'\", causing incorrect HTTP methods and 404 errors in Python 3.x. The patch replaces this with to_native_string(method), which correctly converts byte strings to native strings without adding extra quotes. This fixes compatibility issues with clients like python-neutronclient that pass byte strings as HTTP methods. The failing tests associated with redirects and method encoding confirm the problem.",
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "c1",
+          "label": "Using builtin_str(method) on a byte string like b'GET' yields the literal string \"b'GET'\", causing incorrect HTTP methods and 404 errors.",
+          "type": "Claim",
+          "source": "issue report text",
+          "confidence": 0.95
+        }
+      },
+      {
+        "data": {
+          "id": "c2",
+          "label": "Replacing builtin_str with to_native_string correctly converts byte strings to native strings, fixing the HTTP method issue.",
+          "type": "Claim",
+          "source": "patch diff",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e1",
+          "label": "Failing tests on redirects and encoded methods due to HTTP method conversion problem in Python 3.4.",
+          "type": "Evidence",
+          "source": "failing tests list",
+          "confidence": 0.9
+        }
+      },
+      {
+        "data": {
+          "id": "e2",
+          "label": "Python 2.6 does not have this bug because it handles string conversion differently.",
+          "type": "Evidence",
+          "source": "issue report text",
+          "confidence": 0.8
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "supports:c1->e1",
+          "source": "c1",
+          "target": "e1",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "supports:c2->e1",
+          "source": "c2",
+          "target": "e1",
+          "type": "supports"
+        }
+      },
+      {
+        "data": {
+          "id": "implies:c1->e2",
+          "source": "c1",
+          "target": "e2",
+          "type": "implies"
+        }
+      }
+    ]
+  }
+}
