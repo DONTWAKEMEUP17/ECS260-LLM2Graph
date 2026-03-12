@@ -1,31 +1,31 @@
 {
-  "text": "The gcd function implementation is incorrect because it causes infinite recursion and never reaches the base case when b != 0. The recursive call should swap the arguments to gcd(b, a % b) instead of gcd(a % b, b). This bug leads to maximum recursion depth exceeded errors in the tests.",
+  "text": "The gcd function has a bug where it incorrectly recurses with parameters (a % b, b) instead of (b, a % b), causing infinite recursion and maximum recursion depth errors in tests.",
   "elements": {
     "nodes": [
       {
         "data": {
           "id": "c1",
-          "label": "The gcd function causes infinite recursion and fails the tests.",
+          "label": "gcd function produces infinite recursion causing RecursionError.",
           "type": "Claim",
-          "source": "code:gcd.py#L1-L7,test_gcd.txt#failures",
-          "confidence": 0.95
+          "source": "test_gcd.txt line failures",
+          "confidence": 0.9
         }
       },
       {
         "data": {
           "id": "c2",
-          "label": "The recursive call in gcd should be gcd(b, a % b) not gcd(a % b, b).",
+          "label": "gcd function recurses with wrong argument order (a % b, b).",
           "type": "Claim",
-          "source": "code:gcd.py#L5,test_gcd.txt#error",
+          "source": "code gcd.py line 5",
           "confidence": 0.95
         }
       },
       {
         "data": {
           "id": "a1",
-          "label": "Correct gcd algorithm uses gcd(b, a % b) recursion step.",
+          "label": "Euclid's algorithm requires recursive calls with (b, a % b).",
           "type": "Assumption",
-          "source": "spec,general knowledge",
+          "source": "math theory on gcd",
           "confidence": 0.9
         }
       }

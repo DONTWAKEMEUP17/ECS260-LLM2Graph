@@ -1,8 +1,8 @@
 {
   "bucketsort": {
     "status": "ok",
-    "nodes": 4,
-    "edges": 3
+    "nodes": 2,
+    "edges": 1
   },
   "gcd": {
     "status": "ok",
@@ -11,12 +11,12 @@
   },
   "shortest_paths": {
     "status": "ok",
-    "nodes": 4,
-    "edges": 3
+    "nodes": 3,
+    "edges": 2
   },
   "topological_ordering": {
     "status": "ok",
-    "nodes": 3,
-    "edges": 2
+    "nodes": 4,
+    "edges": 3
   }
 }

@@ -106,4 +106,9 @@ def run_pipeline(data_dir: Path = TEST_CASE_DIR, output_dir: Path = OUTPUT_DIR):
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dir", default=str(TEST_CASE_DIR), help="Input directory (default: test_case)")
+    parser.add_argument("--out", default=str(OUTPUT_DIR), help="Output directory (default: output)")
+    args = parser.parse_args()
+    run_pipeline(Path(args.dir), Path(args.out))

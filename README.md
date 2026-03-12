@@ -41,7 +41,7 @@ export OPENAI_API_KEY="YOUR_API_KEY"
 
 ---
 
-Auto-Pipeline Version:
+## Auto-Pipeline Work:
 
 ```bash
 python pipeline.py # run this first
